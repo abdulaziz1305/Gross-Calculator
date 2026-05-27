@@ -316,11 +316,24 @@ textarea::placeholder{color:var(--txt3);}
 .add-btn{width:100%;background:#1a1714;color:var(--acc);border:none;border-radius:8px;padding:11px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;}
 .add-btn:hover{background:var(--acc);color:#1a1714;}
 
+/* PDF DOWNLOAD BUTTON */
+.btn-pdf-dl{
+  display:block;width:100%;margin-top:14px;padding:16px;
+  background:linear-gradient(135deg,#2d7a5f 0%,#1e5c48 100%);
+  color:#fff;border:none;border-radius:10px;
+  font-family:var(--sans);font-size:14px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 14px rgba(45,122,95,.35);
+}
+.btn-pdf-dl:hover{background:linear-gradient(135deg,#1e5c48 0%,#144030 100%);transform:translateY(-1px);box-shadow:0 6px 18px rgba(45,122,95,.45);}
+.btn-pdf-dl:active{transform:scale(.98);}
+
 @media print{
   @page{size:A4;margin:8mm 10mm;}
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
   body{background:#fff !important;}
-  header,.tabs,#page0,#page1,#page2,#page4,.nav-link,.btn,.btn-dark,.btn-pdf,.btn-reset,.new-week-wrap,#adminModal{display:none !important;}
+  header,.tabs,#page0,#page1,#page2,#page4,.nav-link,.btn,.btn-dark,.btn-pdf,.btn-reset,.new-week-wrap,.btn-pdf-dl,#adminModal{display:none !important;}
   .invoice-wrap{box-shadow:none !important;border:1px solid #ccc !important;border-radius:0 !important;}
   #page3{display:block !important;padding:0 !important;max-width:100% !important;}
 }
@@ -359,13 +372,9 @@ textarea::placeholder{color:var(--txt3);}
     <div class="card">
       <div class="card-head"><div class="dot"></div>Загрузи данные о поездках</div>
       <div class="card-body">
-        <div class="mode-tabs">
-          <button class="mode-tab active" id="modeTabText" onclick="switchMode('Text')">📋 Текст из Relay</button>
-          <button class="mode-tab" id="modeTabExcel" onclick="switchMode('Excel')">📊 Excel файл</button>
-          <button class="mode-tab" id="modeTabImage" onclick="switchMode('Image')">📸 Скриншот AI</button>
-        </div>
 
-        <div class="mode-panel active" id="modeText">
+
+        <div id="modeText">
           <div class="howto">
             <h4>📋 Как скопировать из Amazon Relay</h4>
             <div class="how-step"><div class="n">1</div><p>Открой <strong>Amazon Relay → Trips</strong></p></div>
@@ -379,60 +388,7 @@ textarea::placeholder{color:var(--txt3);}
           <div class="debug-panel" id="debugPanel"></div>
         </div>
 
-        <div class="mode-panel" id="modeExcel">
-          <div class="howto">
-            <h4>📊 Загрузка Excel / CSV</h4>
-            <div class="how-step"><div class="n">1</div><p>Нужны колонки: <strong>Trip ID</strong> и <strong>Amount / Pay</strong></p></div>
-            <div class="how-step"><div class="n">2</div><p>Поддерживается формат выгрузки из <strong>Amazon Relay</strong> и <strong>ручной Excel</strong></p></div>
-          </div>
-          <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()" ondragover="fileDragOver(event)" ondragleave="fileDragLeave(event)" ondrop="fileDrop(event)">
-            <div class="fd-icon">📂</div>
-            <div class="fd-txt">Нажми или перетащи файл</div>
-            <div class="fd-sub">.xlsx, .xls, .csv</div>
-            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" onchange="fileSelected(event)">
-          </div>
-          <div class="file-chosen" id="fileChosen" style="display:none">
-            <span>📊</span>
-            <span class="fc-name" id="fcName"></span>
-            <span class="fc-size" id="fcSize"></span>
-            <button class="fc-clear" onclick="clearFile()">✕</button>
-          </div>
-          <div class="status idle" id="stExcel">Выбери файл...</div>
-          <button class="btn btn-dark" id="btnExcel" onclick="parseExcelAndGo()" disabled>⚡ Обработать Excel →</button>
-        </div>
 
-        <div class="mode-panel" id="modeImage">
-          <div class="offline-note">
-            <div class="on-title">⚠️ Требуется интернет</div>
-            <p>Скриншот анализирует <strong style="color:#60a5fa">Claude AI</strong> через сеть. Оффлайн этот режим не работает.<br>
-            Для оффлайн-работы используй <strong>Excel</strong> или <strong>текстовый</strong> режим.<br>
-            Для деплоя на GitHub Pages — AI режим работает у всех у кого есть интернет.</p>
-          </div>
-          <div class="howto">
-            <h4>📸 Скриншот → AI читает поездки</h4>
-            <div class="how-step"><div class="n">1</div><p>Сделай скрин страницы <strong>Trips из Amazon Relay</strong></p></div>
-            <div class="how-step"><div class="n">2</div><p>Claude AI автоматически прочитает все поездки и суммы</p></div>
-            <div class="how-step"><div class="n">3</div><p>Проверь результат на шаге ③</p></div>
-          </div>
-          <div class="img-drop" id="imgDrop" onclick="document.getElementById('imgInput').click()" ondragover="imgDragOver(event)" ondragleave="imgDragLeave(event)" ondrop="imgDropEvt(event)">
-            <div class="id-icon">🖼️</div>
-            <div class="id-txt">Нажми или перетащи скриншот</div>
-            <div class="id-sub">PNG, JPG, WEBP</div>
-            <input type="file" id="imgInput" accept="image/*" onchange="imgSelected(event)">
-          </div>
-          <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none">
-            <img id="imgPreview" class="img-preview" src="" alt="">
-            <button class="img-preview-clear" onclick="clearImg()">✕ Убрать</button>
-          </div>
-          <div class="ai-processing" id="aiProcessing">
-            <div class="ai-proc-inner">
-              <div class="ai-spinner"></div>
-              <div class="ai-proc-txt"><strong>Claude AI</strong> читает поездки с картинки...</div>
-            </div>
-          </div>
-          <div class="status idle" id="stImage">Загрузи скриншот...</div>
-          <button class="btn btn-dark" id="btnImage" onclick="parseImageAndGo()" disabled>🤖 Прочитать с помощью AI →</button>
-        </div>
       </div>
     </div>
   </div>
@@ -1090,11 +1046,9 @@ function renderInvoice(){
       '<span class="ft-acc">'+(v.driverPayOn?'Driver: '+fmt(driverAmt)+' · ':'')+' Net: '+fmt(Math.max(0,companyNet))+'</span>'+
     '</div>'+
   '</div>'+
-  '<button class="btn btn-dark" style="margin-top:14px" onclick="exportXLSX()">📥 Скачать Excel (.xlsx)</button>'+
-  '<button class="btn btn-pdf" style="margin-top:8px" onclick="downloadHTML()">💾 Скачать HTML</button>'+
+  '<button class="btn-pdf-dl" onclick="downloadPDF()">📄 Скачать PDF</button>'+
   '<div class="new-week-wrap"><div class="new-week-line"></div><div class="new-week-label">Следующий расчёт?</div><div class="new-week-line"></div></div>'+
-  '<button class="btn-reset" onclick="resetAll()">🔄 Новый расчёт</button>'+
-  '<button class="btn-reset" style="margin-top:6px;border-color:var(--blue);color:var(--blue)" onclick="goPage(4)">📚 История</button>';
+  '<button class="btn-reset" onclick="resetAll()">🔄 Новый расчёт</button>';
 }
 
 function resetAll(){
@@ -1139,15 +1093,29 @@ function exportXLSX(){
   XLSX.writeFile(wb,'YURT_'+v.driver.replace(/\s+/g,'_')+'_Truck'+v.truck+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
-function downloadHTML(){
-  var area=document.getElementById('invoicePrintArea');if(!area)return;
+function downloadPDF(){
+  var area=document.getElementById('invoicePrintArea');
+  if(!area){alert('Сначала сформируй инвойс');return;}
   var v=getValues();
+  var fname='YURT_'+v.driver.replace(/\s+/g,'_')+'_Truck'+v.truck+'_'+v.week.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf';
+
+  // Use print-to-PDF via hidden iframe for clean output
   var styles=Array.from(document.querySelectorAll('style')).map(function(s){return'<style>'+s.innerHTML+'</style>';}).join('');
   var links='<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">';
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+links+styles+'<style>body{background:#fff;padding:20px;}</style></head><body>'+area.outerHTML+'</body></html>';
-  var blob=new Blob([html],{type:'text/html'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='YURT_Invoice_'+v.driver.replace(/\s+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.html';a.click();
+  var printHtml='<!DOCTYPE html><html><head><meta charset="UTF-8">'+links+styles+
+    '<style>body{margin:0;padding:10mm;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'+
+    '.invoice-wrap{box-shadow:none!important;border:1px solid #ccc!important;border-radius:0!important;}</style>'+
+    '<script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close();},500);},600);}<\/script>'+
+    '</head><body>'+area.outerHTML+'</body></html>';
+
+  var blob=new Blob([printHtml],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var win=window.open(url,'_blank','width=900,height=700');
+  if(!win){
+    // Fallback: direct print on this page
+    window.print();
+  }
+  setTimeout(function(){URL.revokeObjectURL(url);},5000);
 }
 </script>
 </body>
