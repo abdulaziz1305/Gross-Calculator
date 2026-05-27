@@ -6,6 +6,9 @@
 <title>YURT — Gross Calculator</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
 :root{--bg:#f7f5f0;--bg2:#fff;--bg3:#f0ede6;--border:#e2ddd5;--border2:#d0c9be;--txt:#1a1714;--txt2:#6b6560;--txt3:#9e9890;--acc:#c8873a;--acc2:#a36a25;--grn:#2d7a5f;--grn2:#e8f5f0;--red:#c0392b;--red2:#fdf0ee;--blue:#2c5f8a;--blue2:#eef4fb;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);--shadow2:0 2px 8px rgba(0,0,0,.08),0 8px 32px rgba(0,0,0,.06);--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;--serif:'Playfair Display',serif;--radius:12px;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
@@ -25,6 +28,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .login-field input:focus{border-color:var(--acc);background:#fff;}
 .login-btn{width:100%;background:#1a1714;color:var(--acc);border:none;border-radius:10px;padding:14px;font-family:var(--serif);font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;}
 .login-btn:hover{background:var(--acc);color:#1a1714;}
+.login-btn:disabled{opacity:.6;cursor:not-allowed;}
 .login-err{background:#fdf0ee;color:var(--red);border:1px solid #f5c6c0;border-radius:8px;padding:10px 14px;font-size:12px;margin-top:12px;display:none;}
 
 #app{display:none;}
@@ -38,6 +42,8 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;disp
 .logout-btn:hover{border-color:var(--red);color:var(--red);}
 .admin-btn{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s;}
 .admin-btn:hover{background:var(--acc2);}
+/* Sync dot */
+#syncDot{width:8px;height:8px;border-radius:50%;background:#2dce82;display:inline-block;transition:background .3s;}
 
 .tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;padding:0 16px;}
 .tab-btn{flex-shrink:0;padding:13px 14px;border:none;background:none;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
@@ -100,12 +106,6 @@ textarea::placeholder{color:var(--txt3);}
 .ai-proc-txt{font-size:12px;color:rgba(255,255,255,.8);font-family:var(--mono);}
 .ai-proc-txt strong{color:var(--acc);}
 
-/* OFFLINE NOTICE */
-.offline-note{background:linear-gradient(135deg,#1a2a3a,#0f1e2d);border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid rgba(44,95,138,.3);}
-.offline-note .on-title{font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;font-family:var(--mono);}
-.offline-note p{font-size:11px;color:rgba(255,255,255,.55);line-height:1.6;}
-.offline-note a{color:#60a5fa;text-decoration:underline;}
-
 .status{border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;margin-top:10px;min-height:36px;}
 .status.idle{background:var(--bg);color:var(--txt3);border:1px solid var(--border);}
 .status.ok{background:var(--grn2);color:var(--grn);border:1px solid rgba(45,122,95,.2);}
@@ -137,7 +137,6 @@ textarea::placeholder{color:var(--txt3);}
 .field input:focus{border-color:var(--acc);background:#fff;}
 .field input::placeholder{color:var(--txt3);font-weight:400;font-size:12px;}
 
-/* DEDUCTION ROWS */
 .ded-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);}
 .ded-row:last-child{border-bottom:none;}
 .ded-label{font-size:13px;font-weight:500;}
@@ -145,13 +144,11 @@ textarea::placeholder{color:var(--txt3);}
 .ded-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-family:var(--mono);font-size:14px;font-weight:600;padding:8px 12px;width:110px;text-align:right;outline:none;transition:all .2s;}
 .ded-input:focus{border-color:var(--acc);background:#fff;}
 
-/* DRIVER PAY TOGGLE ROW */
 .ded-row.driver-pay-row{background:rgba(45,122,95,.04);border-radius:8px;padding:11px 10px;margin:-2px -2px 4px;border:1px solid rgba(45,122,95,.15);}
 .ded-row.driver-pay-row .ded-label{color:var(--grn);}
 .ded-row.driver-pay-row .ded-input{border-color:rgba(45,122,95,.3);color:var(--grn);}
 .ded-row.driver-pay-row.disabled-row{opacity:.4;pointer-events:none;}
 
-/* TOGGLE SWITCH */
 .toggle-wrap{display:flex;align-items:center;gap:8px;}
 .toggle{position:relative;width:36px;height:20px;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;}
@@ -166,13 +163,11 @@ textarea::placeholder{color:var(--txt3);}
 .tag-company{background:var(--grn2);color:var(--grn);}
 .tag-owner{background:var(--blue2);color:var(--blue);}
 
-/* GROSS BAR */
 .gross-bar{background:linear-gradient(135deg,#0d3d25 0%,#14532d 100%);border-radius:12px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
 .gb-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(45,208,122,.6);font-family:var(--mono);}
 .gb-val{font-size:28px;font-weight:800;font-family:var(--mono);color:#2dce82;}
 .gb-sub{font-size:11px;color:rgba(45,208,122,.5);font-family:var(--mono);margin-top:2px;}
 
-/* TRIP ITEMS */
 .trip-item{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;box-shadow:var(--shadow);}
 .trip-item.canceled{opacity:.5;background:var(--bg);}
 .trip-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
@@ -193,7 +188,6 @@ textarea::placeholder{color:var(--txt3);}
 .empty{text-align:center;padding:50px 20px;color:var(--txt3);font-size:13px;}
 .empty .ic{font-size:36px;margin-bottom:12px;}
 
-/* HISTORY */
 .hist-card{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden;transition:all .15s;}
 .hist-card:hover{border-color:var(--acc);box-shadow:var(--shadow2);transform:translateY(-1px);}
 .hist-card-top{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
@@ -221,7 +215,6 @@ textarea::placeholder{color:var(--txt3);}
 .hist-empty .ic{font-size:48px;margin-bottom:14px;}
 .hist-empty p{font-size:14px;line-height:1.6;}
 
-/* INVOICE */
 .inv-header{background:linear-gradient(135deg,#1a1714 0%,#2d2620 100%);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;}
 .inv-logo-block .inv-logo{font-family:var(--serif);font-size:32px;font-weight:800;color:var(--acc);letter-spacing:4px;display:block;}
 .inv-logo-block .inv-tagline{font-size:10px;color:rgba(200,135,58,.5);letter-spacing:3px;text-transform:uppercase;margin-top:2px;}
@@ -233,7 +226,6 @@ textarea::placeholder{color:var(--txt3);}
 .inv-info-block .val{font-size:13px;font-weight:700;color:var(--txt);}
 .inv-info-block .val span{font-family:var(--mono);color:var(--acc);}
 
-/* MILES BANNER — single line */
 .inv-miles-banner{background:#1a2a40;padding:10px 32px;display:flex;align-items:center;gap:28px;border-bottom:1px solid rgba(44,95,138,.3);}
 .imb-item{display:flex;align-items:center;gap:8px;}
 .imb-label{font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
@@ -258,7 +250,6 @@ textarea::placeholder{color:var(--txt3);}
 .inv-s-canceled{background:var(--bg3);color:var(--txt3);}
 .inv-s-partial{background:var(--blue2);color:var(--blue);}
 
-/* DEDUCTIONS + DRIVER PAY — all in one table */
 .inv-deductions{padding:0 32px 20px;}
 .inv-ded-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:10px;font-family:var(--mono);padding-top:16px;border-top:1px solid var(--border);}
 .inv-ded-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -267,14 +258,10 @@ textarea::placeholder{color:var(--txt3);}
 .inv-ded-table td{padding:9px 0;}
 .inv-ded-table td:last-child{text-align:right;font-family:var(--mono);font-weight:600;}
 .ded-neg{color:var(--red);}
-/* TOTAL DEDUCTIONS row */
 .row-total-ded td{background:var(--red2);padding:9px 10px !important;font-weight:700;color:var(--red);font-size:13px;border-radius:6px;}
-/* DRIVER PAY row — bright green, same font as deductions */
 .row-driver-pay td{background:rgba(45,122,95,.08);padding:9px 10px !important;font-weight:700;color:#16a34a;font-size:13px;border-radius:6px;border-bottom:none !important;}
 .row-driver-pay td:last-child{color:#16a34a;font-size:14px;}
-/* COMPANY NET row */
 .row-company-net td{padding:9px 10px !important;color:var(--txt2);font-size:13px;}
-/* spacer */
 .row-spacer td{padding:4px 0 !important;border:none !important;}
 
 .inv-footer{background:#1a1714;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
@@ -290,7 +277,6 @@ textarea::placeholder{color:var(--txt3);}
 .nav-link{display:flex;justify-content:center;margin-top:12px;}
 .nav-link button{background:none;border:none;color:var(--acc);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;}
 
-/* ADMIN MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3);}
@@ -316,17 +302,8 @@ textarea::placeholder{color:var(--txt3);}
 .add-btn{width:100%;background:#1a1714;color:var(--acc);border:none;border-radius:8px;padding:11px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;}
 .add-btn:hover{background:var(--acc);color:#1a1714;}
 
-/* PDF DOWNLOAD BUTTON */
-.btn-pdf-dl{
-  display:block;width:100%;margin-top:14px;padding:16px;
-  background:linear-gradient(135deg,#2d7a5f 0%,#1e5c48 100%);
-  color:#fff;border:none;border-radius:10px;
-  font-family:var(--sans);font-size:14px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.8px;
-  cursor:pointer;transition:all .2s;
-  box-shadow:0 4px 14px rgba(45,122,95,.35);
-}
-.btn-pdf-dl:hover{background:linear-gradient(135deg,#1e5c48 0%,#144030 100%);transform:translateY(-1px);box-shadow:0 6px 18px rgba(45,122,95,.45);}
+.btn-pdf-dl{display:block;width:100%;margin-top:14px;padding:16px;background:linear-gradient(135deg,#2d7a5f 0%,#1e5c48 100%);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(45,122,95,.35);}
+.btn-pdf-dl:hover{background:linear-gradient(135deg,#1e5c48 0%,#144030 100%);transform:translateY(-1px);}
 .btn-pdf-dl:active{transform:scale(.98);}
 
 @media print{
@@ -346,7 +323,7 @@ textarea::placeholder{color:var(--txt3);}
     <div class="login-logo"><div class="badge">YURT</div><p>TRUCKING LLC · Driver Portal</p></div>
     <div class="login-field"><label>Логин</label><input type="text" id="loginUser" placeholder="username" autocomplete="username"></div>
     <div class="login-field"><label>Пароль</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
-    <button class="login-btn" onclick="doLogin()">Войти →</button>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Войти →</button>
     <div class="login-err" id="loginErr">✗ Неверный логин или пароль</div>
   </div>
 </div>
@@ -355,6 +332,7 @@ textarea::placeholder{color:var(--txt3);}
   <header>
     <div class="hdr-left"><div class="hdr-logo">YURT</div><div class="hdr-title">Gross Calculator</div></div>
     <div class="hdr-right">
+      <span id="syncDot" style="width:8px;height:8px;border-radius:50%;background:#9e9890;display:inline-block;transition:background .3s;" title="Sync"></span>
       <span class="hdr-user" id="currentUserLabel"></span>
       <button class="admin-btn" id="adminBtn" onclick="openAdmin()" style="display:none">⚙ Пользователи</button>
       <button class="logout-btn" onclick="doLogout()">Выйти</button>
@@ -372,8 +350,6 @@ textarea::placeholder{color:var(--txt3);}
     <div class="card">
       <div class="card-head"><div class="dot"></div>Загрузи данные о поездках</div>
       <div class="card-body">
-
-
         <div id="modeText">
           <div class="howto">
             <h4>📋 Как скопировать из Amazon Relay</h4>
@@ -387,8 +363,6 @@ textarea::placeholder{color:var(--txt3);}
           <button class="btn-dbg" onclick="toggleDebug()">🔍 Детали парсинга</button>
           <div class="debug-panel" id="debugPanel"></div>
         </div>
-
-
       </div>
     </div>
   </div>
@@ -406,8 +380,6 @@ textarea::placeholder{color:var(--txt3);}
     <div class="card">
       <div class="card-head"><div class="dot"></div>Вычеты (Deductions)</div>
       <div class="card-body">
-
-        <!-- DRIVER PAY TOGGLE ROW -->
         <div class="ded-row driver-pay-row" id="driverPayRow">
           <div style="display:flex;align-items:center;gap:12px;flex:1">
             <label class="toggle" title="Вкл/выкл Driver Pay">
@@ -422,7 +394,6 @@ textarea::placeholder{color:var(--txt3);}
           </div>
           <input class="ded-input" id="driverPay" type="number" value="35" min="0" max="100" style="border-color:rgba(45,122,95,.3);color:var(--grn);">
         </div>
-
         <div class="ded-row"><div class="ded-label">Dispatch Charge<span>% от гросса</span></div><input class="ded-input" id="dispatchPct" type="number" value="10" min="0" max="100"></div>
         <div class="ded-row"><div class="ded-label">Insurance<span>фиксированная $</span></div><input class="ded-input" id="insurance" type="number" value="500" min="0"></div>
         <div class="ded-row"><div class="ded-label">ELD<span>фиксированная $</span></div><input class="ded-input" id="eld" type="number" value="40" min="0"></div>
@@ -471,29 +442,79 @@ textarea::placeholder{color:var(--txt3);}
 </div>
 
 <script>
-// ══ AUTH ══
-var USERS_KEY='yurt_users_v2',SESSION_KEY='yurt_session_v2';
-var currentUser=null,trips=[],debugData=[];
+// ════════════════════════════════════════════
+// FIREBASE CONFIG
+// ════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDiP38vLYp35V_dj4k0YhWLvPTFuTsBGVU",
+  authDomain: "yurt-gross-calculator.firebaseapp.com",
+  databaseURL: "https://yurt-gross-calculator-default-rtdb.firebaseio.com",
+  projectId: "yurt-gross-calculator",
+  storageBucket: "yurt-gross-calculator.firebasestorage.app",
+  messagingSenderId: "1096393291694",
+  appId: "1:1096393291694:web:e979f2e881dee88152fa3f"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
 
-function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||[];}catch(e){return[];}}
-function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u));}
-function initUsers(){if(!getUsers().length)saveUsers([{login:'admin',pass:'yurt2024',name:'Admin',role:'admin'}]);}
+// Sync dot
+db.ref('.info/connected').on('value', function(snap){
+  var dot = document.getElementById('syncDot');
+  if(!dot) return;
+  dot.style.background = snap.val() ? '#2dce82' : '#c0392b';
+  dot.title = snap.val() ? '🟢 Online' : '🔴 Offline';
+});
 
-function doLogin(){
-  var u=document.getElementById('loginUser').value.trim();
-  var p=document.getElementById('loginPass').value;
-  var found=getUsers().find(function(x){return x.login===u&&x.pass===p;});
-  if(found){localStorage.setItem(SESSION_KEY,JSON.stringify(found));document.getElementById('loginErr').style.display='none';startApp(found);}
-  else document.getElementById('loginErr').style.display='block';
+// ════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════
+var SESSION_KEY = 'yurt_fb_v1';
+var currentUser = null, trips = [], debugData = [];
+
+function initDefaultAdmin(){
+  db.ref('users/admin').once('value').then(function(snap){
+    if(!snap.exists()) db.ref('users/admin').set({pass:'yurt2024',name:'Admin',role:'admin'});
+  }).catch(function(){});
+}
+
+async function doLogin(){
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value;
+  if(!u||!p) return;
+  var btn = document.getElementById('loginBtn');
+  var err = document.getElementById('loginErr');
+  btn.textContent = '⏳ Вход...'; btn.disabled = true; err.style.display = 'none';
+  try {
+    var snap = await db.ref('users/'+u).get();
+    if(snap.exists() && snap.val().pass === p){
+      var user = Object.assign({login:u}, snap.val());
+      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+      btn.textContent = 'Войти →'; btn.disabled = false;
+      startApp(user);
+    } else {
+      err.textContent = '✗ Неверный логин или пароль';
+      err.style.display = 'block';
+      btn.textContent = 'Войти →'; btn.disabled = false;
+    }
+  } catch(e) {
+    // Offline fallback
+    try {
+      var cached = JSON.parse(localStorage.getItem(SESSION_KEY));
+      if(cached && cached.login===u && cached.pass===p){ btn.textContent='Войти →'; btn.disabled=false; startApp(cached); return; }
+    } catch(e2){}
+    err.textContent = '✗ Ошибка подключения. Проверь интернет.';
+    err.style.display = 'block';
+    btn.textContent = 'Войти →'; btn.disabled = false;
+  }
 }
 document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 
 function doLogout(){
-  localStorage.removeItem(SESSION_KEY);currentUser=null;trips=[];debugData=[];
+  localStorage.removeItem(SESSION_KEY); currentUser=null; trips=[]; debugData=[];
   document.getElementById('app').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';
+  document.getElementById('loginUser').value=''; document.getElementById('loginPass').value='';
 }
 
 function startApp(user){
@@ -504,65 +525,101 @@ function startApp(user){
   document.getElementById('adminBtn').style.display=user.role==='admin'?'':'none';
   ['driverName','truckNum','weekPeriod'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('companyName').value='YURT Trucking LLC';
-  document.getElementById('driverPay').value='35';document.getElementById('dispatchPct').value='10';
-  document.getElementById('insurance').value='500';document.getElementById('eld').value='40';
-  document.getElementById('ifta').value='120';document.getElementById('fuel').value='0';document.getElementById('other').value='0';
+  document.getElementById('driverPay').value='35'; document.getElementById('dispatchPct').value='10';
+  document.getElementById('insurance').value='500'; document.getElementById('eld').value='40';
+  document.getElementById('ifta').value='120'; document.getElementById('fuel').value='0'; document.getElementById('other').value='0';
   document.getElementById('driverPayToggle').checked=true;
   document.getElementById('driverPayRow').classList.remove('disabled-row');
   document.getElementById('driverPayTag').textContent='Company Driver';
   document.getElementById('driverPayTag').className='dpl-tag tag-company';
-  document.getElementById('rawInput').value='';trips=[];debugData=[];
+  document.getElementById('rawInput').value=''; trips=[]; debugData=[];
   goPage(0);
 }
 
-// ══ DRIVER PAY TOGGLE ══
-function toggleDriverPay(){
-  var on=document.getElementById('driverPayToggle').checked;
-  var row=document.getElementById('driverPayRow');
-  var tag=document.getElementById('driverPayTag');
-  row.classList.toggle('disabled-row',!on);
-  if(on){tag.textContent='Company Driver';tag.className='dpl-tag tag-company';}
-  else{tag.textContent='Owner Operator';tag.className='dpl-tag tag-owner';}
-}
+// ════════════════════════════════════════════
+// ADMIN — Firebase
+// ════════════════════════════════════════════
+function openAdmin(){ renderUserList(); document.getElementById('adminModal').classList.add('open'); }
+function closeAdmin(){ document.getElementById('adminModal').classList.remove('open'); }
 
-// ══ ADMIN ══
-function openAdmin(){renderUserList();document.getElementById('adminModal').classList.add('open');}
-function closeAdmin(){document.getElementById('adminModal').classList.remove('open');}
-function renderUserList(){
-  var users=getUsers(),admins=users.filter(function(u){return u.role==='admin';});
-  document.getElementById('userList').innerHTML=users.map(function(u,i){
-    var canDel=!(u.role==='admin'&&admins.length===1);
-    return '<div class="user-row"><span class="uname">'+u.login+'</span><span class="uname-real">'+(u.name||'')+'</span>'+
+async function renderUserList(){
+  document.getElementById('userList').innerHTML='<p style="text-align:center;color:var(--txt3);font-size:12px">⏳ Загрузка...</p>';
+  var snap = await db.ref('users').get();
+  var data = snap.val()||{};
+  var users = Object.keys(data).map(function(k){ return Object.assign({login:k},data[k]); });
+  var admins = users.filter(function(u){return u.role==='admin';});
+  document.getElementById('userList').innerHTML = users.map(function(u){
+    var canDel = !(u.role==='admin'&&admins.length<=1);
+    return '<div class="user-row">'+
+      '<span class="uname">'+u.login+'</span>'+
+      '<span class="uname-real">'+(u.name||'')+'</span>'+
       '<span class="urole'+(u.role==='admin'?' admin':'')+'">'+u.role+'</span>'+
-      (canDel?'<button class="udelete" onclick="deleteUser('+i+')">✕</button>':'')+
+      (canDel?'<button class="udelete" onclick="deleteUser(\''+u.login+'\')">✕</button>':'')+
     '</div>';
   }).join('')||'<p style="text-align:center;color:var(--txt3);font-size:12px">Нет пользователей</p>';
 }
-function addUser(){
-  var login=document.getElementById('newLogin').value.trim(),pass=document.getElementById('newPass').value;
-  var name=document.getElementById('newName').value.trim(),role=document.getElementById('newRole').value;
-  if(!login||!pass)return alert('Введи логин и пароль');
-  var users=getUsers();
-  if(users.find(function(u){return u.login===login;}))return alert('Такой логин уже есть');
-  users.push({login:login,pass:pass,name:name,role:role});saveUsers(users);
-  document.getElementById('newLogin').value='';document.getElementById('newPass').value='';document.getElementById('newName').value='';
-  renderUserList();
-}
-function deleteUser(i){if(!confirm('Удалить?'))return;var u=getUsers();u.splice(i,1);saveUsers(u);renderUserList();}
 
-// ══ HISTORY ══
-function histKey(){return 'yurt_hist_v2_'+(currentUser?currentUser.login:'anon');}
-function getHistory(){try{return JSON.parse(localStorage.getItem(histKey()))||[];}catch(e){return[];}}
-function saveHistory(h){localStorage.setItem(histKey(),JSON.stringify(h));}
-function saveToHistory(r){var h=getHistory();h.unshift(r);if(h.length>100)h=h.slice(0,100);saveHistory(h);}
-function deleteFromHistory(id){saveHistory(getHistory().filter(function(r){return r.id!==id;}));}
+async function addUser(){
+  var login=document.getElementById('newLogin').value.trim();
+  var pass=document.getElementById('newPass').value;
+  var name=document.getElementById('newName').value.trim();
+  var role=document.getElementById('newRole').value;
+  if(!login||!pass)return alert('Введи логин и пароль');
+  try {
+    var snap=await db.ref('users/'+login).get();
+    if(snap.exists())return alert('Логин уже занят');
+    await db.ref('users/'+login).set({pass:pass,name:name,role:role});
+    document.getElementById('newLogin').value=''; document.getElementById('newPass').value=''; document.getElementById('newName').value='';
+    renderUserList();
+    alert('✓ Пользователь '+login+' добавлен! Он может войти с любого устройства.');
+  } catch(e){ alert('Ошибка: '+e.message); }
+}
+
+async function deleteUser(login){
+  if(!confirm('Удалить пользователя '+login+'?'))return;
+  await db.ref('users/'+login).remove(); renderUserList();
+}
+
+// ════════════════════════════════════════════
+// HISTORY — Firebase per user
+// ════════════════════════════════════════════
+function histPath(){ return 'history/'+(currentUser?currentUser.login:'anon'); }
+
+async function getHistory(){
+  try {
+    var snap = await db.ref(histPath()).get();
+    var data = snap.val()||{};
+    var arr = Object.keys(data).map(function(k){return data[k];});
+    arr.sort(function(a,b){return (b.savedAt||'').localeCompare(a.savedAt||'');});
+    return arr;
+  } catch(e){ return []; }
+}
+
+async function saveToHistory(record){
+  try { await db.ref(histPath()+'/'+record.id).set(record); } catch(e){ console.warn('Save failed',e); }
+}
+
+async function deleteFromHistory(id){
+  try { await db.ref(histPath()+'/'+id).remove(); } catch(e){}
+}
 
 var histFilterDriver='all';
-function renderHistory(){
-  var h=getHistory(),c=document.getElementById('histContainer'),fc=document.getElementById('histFilter'),cnt=document.getElementById('histCount');
-  if(!h.length){fc.innerHTML='';cnt.textContent='';c.innerHTML='<div class="hist-empty"><div class="ic">📭</div><p>Здесь будут твои расчёты.<br>Сделай первый инвойс — он сохранится автоматически.</p></div>';return;}
-  var drivers=['all'];h.forEach(function(r){if(r.driver&&drivers.indexOf(r.driver)===-1)drivers.push(r.driver);});
-  fc.innerHTML=drivers.map(function(d){return'<button class="hf-btn'+(histFilterDriver===d?' active':'')+'" onclick="setHistFilter(\''+d.replace(/'/g,"\\'")+'\')">'+( d==='all'?'Все':d)+'</button>';}).join('');
+
+async function renderHistory(){
+  var c=document.getElementById('histContainer'),fc=document.getElementById('histFilter'),cnt=document.getElementById('histCount');
+  c.innerHTML='<div class="empty"><div class="ic">⏳</div>Загрузка из облака...</div>';
+  var h = await getHistory();
+  if(!h.length){
+    fc.innerHTML=''; cnt.textContent='';
+    c.innerHTML='<div class="hist-empty"><div class="ic">📭</div><p>Здесь будут твои расчёты.<br>Сделай первый инвойс — он сохранится автоматически.</p></div>';
+    return;
+  }
+  var drivers=['all'];
+  h.forEach(function(r){if(r.driver&&drivers.indexOf(r.driver)===-1)drivers.push(r.driver);});
+  fc.innerHTML=drivers.map(function(d){
+    return '<button class="hf-btn'+(histFilterDriver===d?' active':'')+'" onclick="setHistFilter(\''+d.replace(/'/g,"\\'")+'\')">'+
+      (d==='all'?'Все':d)+'</button>';
+  }).join('');
   var filtered=histFilterDriver==='all'?h:h.filter(function(r){return r.driver===histFilterDriver;});
   cnt.textContent=filtered.length+' расчётов';
   if(!filtered.length){c.innerHTML='<div class="hist-empty"><div class="ic">🔍</div><p>Нет расчётов.</p></div>';return;}
@@ -571,8 +628,10 @@ function renderHistory(){
     return '<div class="hist-card">'+
       '<div class="hist-card-top" onclick="openHistRecord(\''+r.id+'\')">'+
         '<div class="hist-avatar">'+ini+'</div>'+
-        '<div class="hist-info"><div class="hist-driver">'+(r.driver||'—')+'</div><div class="hist-week">'+r.week+' · Truck #'+r.truck+'</div></div>'+
-        '<div class="hist-amounts"><div class="hist-gross">'+fmt(r.gross)+'</div><div class="hist-net">'+(r.driverPayOn?'Driver: '+fmt(r.driverAmt):'Owner Op.')+'</div></div>'+
+        '<div class="hist-info"><div class="hist-driver">'+(r.driver||'—')+'</div>'+
+        '<div class="hist-week">'+r.week+' · Truck #'+r.truck+'</div></div>'+
+        '<div class="hist-amounts"><div class="hist-gross">'+fmt(r.gross)+'</div>'+
+        '<div class="hist-net">'+(r.driverPayOn?'Driver: '+fmt(r.driverAmt||0):'Owner Op.')+'</div></div>'+
       '</div>'+
       '<div class="hist-card-bot">'+
         '<div class="hist-tags">'+
@@ -582,53 +641,65 @@ function renderHistory(){
         '</div>'+
         '<div class="hist-actions">'+
           '<button class="hist-btn" onclick="openHistRecord(\''+r.id+'\');event.stopPropagation()">👁 Открыть</button>'+
-          '<button class="hist-btn del" onclick="deleteHist(\''+r.id+'\');event.stopPropagation()">✕ Удалить</button>'+
+          '<button class="hist-btn del" onclick="deleteHistAsync(\''+r.id+'\');event.stopPropagation()">✕ Удалить</button>'+
         '</div>'+
       '</div>'+
     '</div>';
   }).join('');
 }
 function setHistFilter(d){histFilterDriver=d;renderHistory();}
-function deleteHist(id){if(!confirm('Удалить?'))return;deleteFromHistory(id);renderHistory();}
-function openHistRecord(id){
-  var r=getHistory().find(function(x){return x.id===id;});if(!r)return;
+async function deleteHistAsync(id){if(!confirm('Удалить?'))return;await deleteFromHistory(id);renderHistory();}
+
+async function openHistRecord(id){
+  var h=await getHistory(); var r=h.find(function(x){return x.id===id;});if(!r)return;
   trips=r.trips;
-  document.getElementById('companyName').value=r.company||'';
-  document.getElementById('driverName').value=r.driver||'';
-  document.getElementById('truckNum').value=r.truck||'';
-  document.getElementById('weekPeriod').value=r.week||'';
-  document.getElementById('driverPay').value=r.driverPayPct||35;
-  document.getElementById('dispatchPct').value=r.dp||10;
-  document.getElementById('insurance').value=r.ins||500;
-  document.getElementById('eld').value=r.eld||40;
-  document.getElementById('ifta').value=r.ifta||120;
-  document.getElementById('fuel').value=r.fuel||0;
-  document.getElementById('other').value=r.other||0;
+  document.getElementById('companyName').value=r.company||''; document.getElementById('driverName').value=r.driver||'';
+  document.getElementById('truckNum').value=r.truck||''; document.getElementById('weekPeriod').value=r.week||'';
+  document.getElementById('driverPay').value=r.driverPayPct||35; document.getElementById('dispatchPct').value=r.dp||10;
+  document.getElementById('insurance').value=r.ins||500; document.getElementById('eld').value=r.eld||40;
+  document.getElementById('ifta').value=r.ifta||120; document.getElementById('fuel').value=r.fuel||0; document.getElementById('other').value=r.other||0;
   var dpOn=r.driverPayOn!==false;
-  document.getElementById('driverPayToggle').checked=dpOn;
-  toggleDriverPay();
+  document.getElementById('driverPayToggle').checked=dpOn; toggleDriverPay();
   goPage(3);
 }
 
-initUsers();
-(function(){try{var s=JSON.parse(localStorage.getItem(SESSION_KEY));if(s&&s.login){startApp(s);return;}}catch(e){}document.getElementById('loginScreen').style.display='flex';})();
+// SESSION ON LOAD
+initDefaultAdmin();
+(function(){
+  try {
+    var s=JSON.parse(localStorage.getItem(SESSION_KEY));
+    if(s&&s.login){
+      db.ref('users/'+s.login).get().then(function(snap){
+        if(snap.exists()&&snap.val().pass===s.pass){ startApp(Object.assign({login:s.login},snap.val())); }
+        else { localStorage.removeItem(SESSION_KEY); document.getElementById('loginScreen').style.display='flex'; }
+      }).catch(function(){ startApp(s); }); // offline — trust cache
+      return;
+    }
+  } catch(e){}
+  document.getElementById('loginScreen').style.display='flex';
+})();
 
-// ══ NAVIGATION ══
+// ════════════════════════════════════════════
+// NAVIGATION & UI
+// ════════════════════════════════════════════
 function goPage(n){
   document.querySelectorAll('.page').forEach(function(p,i){p.classList.toggle('active',i===n);});
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===n);});
-  if(n===2)renderTrips();if(n===3)renderInvoice();if(n===4)renderHistory();
+  if(n===2)renderTrips(); if(n===3)renderInvoice(); if(n===4)renderHistory();
   window.scrollTo(0,0);
-}
-function switchMode(m){
-  ['Text','Excel','Image'].forEach(function(x){
-    document.getElementById('modeTab'+x).classList.toggle('active',x===m);
-    document.getElementById('mode'+x).classList.toggle('active',x===m);
-  });
 }
 function fmt(n){return'$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 
-// ══ DOLLAR PARSER — all formats ══
+function toggleDriverPay(){
+  var on=document.getElementById('driverPayToggle').checked;
+  document.getElementById('driverPayRow').classList.toggle('disabled-row',!on);
+  document.getElementById('driverPayTag').textContent=on?'Company Driver':'Owner Operator';
+  document.getElementById('driverPayTag').className='dpl-tag '+(on?'tag-company':'tag-owner');
+}
+
+// ════════════════════════════════════════════
+// DOLLAR PARSER — all formats
+// ════════════════════════════════════════════
 function parseDollar(s){
   s=(s||'').toString().replace(/\$/g,'').trim();
   if(!s)return 0;
@@ -640,12 +711,8 @@ function parseDollar(s){
     if(/,\d{1,2}$/.test(s))return parseFloat(s.replace(',','.'))||0;
     return parseFloat(s.replace(/,/g,''))||0;
   }
-  if(dots>0&&commas===1&&s.indexOf(',')>s.lastIndexOf('.')){
-    return parseFloat(s.replace(/\./g,'').replace(',','.'))||0;
-  }
-  if(commas>0&&dots===1&&s.indexOf('.')>s.lastIndexOf(',')){
-    return parseFloat(s.replace(/,/g,''))||0;
-  }
+  if(dots>0&&commas===1&&s.indexOf(',')>s.lastIndexOf('.')){return parseFloat(s.replace(/\./g,'').replace(',','.'))||0;}
+  if(commas>0&&dots===1&&s.indexOf('.')>s.lastIndexOf(',')){ return parseFloat(s.replace(/,/g,''))||0;}
   if(commas===1&&dots===0){
     var parts=s.split(',');
     if(parts[1]&&parts[1].length<=2)return parseFloat(s.replace(',','.'))||0;
@@ -655,7 +722,9 @@ function parseDollar(s){
   return parseFloat(s)||0;
 }
 
-// ══ TEXT PARSER ══
+// ════════════════════════════════════════════
+// TEXT PARSER
+// ════════════════════════════════════════════
 function extractRate(flat,lines){
   var labelRe=/(?:rate|gross|amount|total|pay(?:out)?|earnings?|revenue)[\s:=]*\$([\d\s.,]+)/gi;
   var m,best=0;
@@ -694,7 +763,6 @@ function parseTextAndGo(){
     var block=blocks[b],flat=block.lines.join(' ');
     var hasCanceled=/canceled|cancell?ed/i.test(flat);
     var ex=extractRate(flat,block.lines);
-    // KEY FIX: if canceled but has a rate, it's partial pay (not truly canceled)
     var trulyCanceled=hasCanceled&&ex.rate===0;
     var miM=flat.match(/(\d+)\s*mi\b/i),miles=miM?parseInt(miM[1]):0;
     var stopLines=block.lines.filter(function(ln){return /^\d+\s+[A-Z]/.test(ln)||/^[A-Z]{2,5}\d*\s+[A-Z]/.test(ln);});
@@ -709,7 +777,7 @@ function parseTextAndGo(){
   var canc=trips.filter(function(t){return t.canceled;}).length;
   var gross=trips.filter(function(t){return !t.canceled;}).reduce(function(s,t){return s+t.rate;},0);
   var zeros=trips.filter(function(t){return !t.canceled&&t.rate===0;}).length;
-  if(zeros>0){st.className='status warn';st.textContent='⚠ '+trips.length+' поездок | '+zeros+' без суммы — проверь детали!';}
+  if(zeros>0){st.className='status warn';st.textContent='⚠ '+trips.length+' | '+zeros+' без суммы — проверь детали!';}
   else{st.className='status ok';st.textContent='✓ '+trips.length+' | Оплач: '+paid+' | Отмен: '+canc+' | Гросс: '+fmt(gross);}
   renderDebug();goPage(1);
 }
@@ -726,187 +794,9 @@ function renderDebug(){
 }
 function toggleDebug(){document.getElementById('debugPanel').classList.toggle('show');}
 
-// ══ EXCEL PARSER ══
-var xlsxFile=null;
-function fileDragOver(e){e.preventDefault();document.getElementById('fileDrop').classList.add('dragover');}
-function fileDragLeave(){document.getElementById('fileDrop').classList.remove('dragover');}
-function fileDrop(e){e.preventDefault();document.getElementById('fileDrop').classList.remove('dragover');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);}
-function fileSelected(e){if(e.target.files[0])setFile(e.target.files[0]);}
-function setFile(f){
-  xlsxFile=f;
-  document.getElementById('fileDrop').style.display='none';
-  document.getElementById('fileChosen').style.display='flex';
-  document.getElementById('fcName').textContent=f.name;
-  document.getElementById('fcSize').textContent=(f.size/1024).toFixed(0)+' КБ';
-  document.getElementById('stExcel').className='status ok';
-  document.getElementById('stExcel').textContent='✓ Загружен: '+f.name;
-  document.getElementById('btnExcel').disabled=false;
-}
-function clearFile(){
-  xlsxFile=null;
-  document.getElementById('fileDrop').style.display='block';
-  document.getElementById('fileChosen').style.display='none';
-  document.getElementById('stExcel').className='status idle';
-  document.getElementById('stExcel').textContent='Выбери файл...';
-  document.getElementById('btnExcel').disabled=true;
-  document.getElementById('fileInput').value='';
-}
-function findCol(headers,candidates){
-  for(var i=0;i<headers.length;i++){
-    var h=(headers[i]||'').toString().toLowerCase().trim();
-    for(var j=0;j<candidates.length;j++){if(h.indexOf(candidates[j])!==-1)return i;}
-  }
-  return -1;
-}
-function parseExcelAndGo(){
-  if(!xlsxFile)return;
-  var st=document.getElementById('stExcel');
-  st.className='status loading';st.textContent='Читаю файл...';
-  var reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
-      var ws=wb.Sheets[wb.SheetNames[0]];
-      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      if(rows.length<2){st.className='status err';st.textContent='✗ Файл пустой';return;}
-      // Find header row
-      var headerRow=-1,headers=[];
-      for(var r=0;r<Math.min(15,rows.length);r++){
-        var row=rows[r].map(function(c){return(c||'').toString().toLowerCase();});
-        if(row.some(function(c){return c.indexOf('trip')!==-1||c.indexOf('id')!==-1||c.indexOf('amount')!==-1||c.indexOf('pay')!==-1;})){
-          headerRow=r;headers=rows[r];break;
-        }
-      }
-
-      // Auto detect driver/week info from top rows
-      for(var r2=0;r2<Math.min(8,rows.length);r2++){
-        var rStr=rows[r2].join(' ');
-        var nmM=rStr.match(/name\s*:\s*([A-Za-z][A-Za-z\s.]+?)(?:\s{3,}|$)/i);
-        if(nmM&&nmM[1].trim().length>2)document.getElementById('driverName').value=nmM[1].trim();
-        var prM=rStr.match(/period\s*:\s*([^\s].{3,30}?)(?:\s{3,}|$)/i);
-        if(prM&&prM[1].trim())document.getElementById('weekPeriod').value=prM[1].trim();
-      }
-
-      if(headerRow===-1){st.className='status err';st.textContent='✗ Не найдены заголовки. Нужны: Trip ID и Amount/Pay';return;}
-      var idCol=findCol(headers,['trip id','load id','trip_id','id','#','load']);
-      var amtCol=findCol(headers,['pay amount','amount','pay','rate','gross','total','earning','revenue','payout']);
-      var fromCol=findCol(headers,['from','origin','pickup','pick']);
-      var toCol=findCol(headers,['to','dest','delivery','drop']);
-      var miCol=findCol(headers,['mile','mi','distance','dist']);
-      var statusCol=findCol(headers,['status','state']);
-      if(idCol===-1||amtCol===-1){st.className='status err';st.textContent='✗ Нет нужных колонок. Найдены: '+headers.filter(Boolean).join(', ');return;}
-      trips=[];debugData=[];
-      for(var i=headerRow+1;i<rows.length;i++){
-        var row=rows[i];
-        var id=(row[idCol]||'').toString().trim();
-        if(!id||id.toLowerCase()==='adjustments'||id.toLowerCase()==='total'||id.toLowerCase()==='subtotal')continue;
-        var rawAmt=(row[amtCol]||'').toString();
-        var rate=parseDollar(rawAmt);
-        var statusTxt=(statusCol!==-1?(row[statusCol]||''):'').toString().toLowerCase();
-        var isCanceled=statusTxt.indexOf('cancel')!==-1;
-        // If rate is 0 and no status text, skip empty rows
-        if(rate===0&&!statusTxt&&!id)continue;
-        var from=fromCol!==-1?(row[fromCol]||'').toString().slice(0,50):'—';
-        var to=toCol!==-1?(row[toCol]||'').toString().slice(0,50):'—';
-        var miles=miCol!==-1?parseFloat((row[miCol]||0).toString().replace(/,/g,''))||0:0;
-        // Canceled with partial pay = partial
-        var sl=isCanceled?(rate>0?'partial':'canceled'):'paid';
-        var trulyCanceled=isCanceled&&rate===0;
-        trips.push({id:id,from:from,to:to,miles:miles,rate:trulyCanceled?0:rate,pct:100,canceled:trulyCanceled,statusLabel:sl});
-        debugData.push({id:id,rate:rate,method:'excel',sl:sl,preview:'Raw: "'+rawAmt+'" → '+fmt(trulyCanceled?0:rate)});
-      }
-      if(!trips.length){st.className='status err';st.textContent='✗ Поездок не найдено';return;}
-      var paid=trips.filter(function(t){return !t.canceled;}).length;
-      var canc=trips.filter(function(t){return t.canceled;}).length;
-      var gross=trips.filter(function(t){return !t.canceled;}).reduce(function(s,t){return s+t.rate;},0);
-      st.className='status ok';st.textContent='✓ '+trips.length+' | Оплач: '+paid+' | Отмен: '+canc+' | Гросс: '+fmt(gross);
-      goPage(1);
-    }catch(err){st.className='status err';st.textContent='✗ Ошибка: '+err.message;}
-  };
-  reader.readAsArrayBuffer(xlsxFile);
-}
-
-// ══ IMAGE AI ══
-var imgBase64=null,imgMediaType='image/png';
-function imgDragOver(e){e.preventDefault();document.getElementById('imgDrop').classList.add('dragover');}
-function imgDragLeave(){document.getElementById('imgDrop').classList.remove('dragover');}
-function imgDropEvt(e){e.preventDefault();document.getElementById('imgDrop').classList.remove('dragover');if(e.dataTransfer.files[0])setImg(e.dataTransfer.files[0]);}
-function imgSelected(e){if(e.target.files[0])setImg(e.target.files[0]);}
-function setImg(f){
-  imgMediaType=f.type||'image/png';
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    var full=ev.target.result;imgBase64=full.split(',')[1];
-    document.getElementById('imgDrop').style.display='none';
-    document.getElementById('imgPreviewWrap').style.display='block';
-    document.getElementById('imgPreview').src=full;
-    document.getElementById('stImage').className='status ok';
-    document.getElementById('stImage').textContent='✓ Скриншот загружен';
-    document.getElementById('btnImage').disabled=false;
-  };
-  reader.readAsDataURL(f);
-}
-function clearImg(){
-  imgBase64=null;
-  document.getElementById('imgDrop').style.display='block';
-  document.getElementById('imgPreviewWrap').style.display='none';
-  document.getElementById('imgPreview').src='';
-  document.getElementById('stImage').className='status idle';
-  document.getElementById('stImage').textContent='Загрузи скриншот...';
-  document.getElementById('btnImage').disabled=true;
-  document.getElementById('imgInput').value='';
-  document.getElementById('aiProcessing').classList.remove('show');
-}
-async function parseImageAndGo(){
-  if(!imgBase64)return;
-  var st=document.getElementById('stImage'),btn=document.getElementById('btnImage'),ai=document.getElementById('aiProcessing');
-  st.className='status loading';st.textContent='AI анализирует...';
-  btn.disabled=true;ai.classList.add('show');
-  var prompt='You are a data extraction assistant for a trucking company.\nAnalyze this Amazon Relay Trips screenshot and extract ALL trips.\n\nFor EACH trip extract:\n- id: Trip ID (like 1137VQ3SY, T-1167JQDKG, 116NSNF72)\n- from: pickup city/state\n- to: delivery city/state\n- miles: distance number (integer)\n- amount: pay amount in USD as a number\n- status: "paid" or "canceled"\n\nCRITICAL for amounts:\n- "$700,72" = 700.72 (comma is decimal separator)\n- "$1 005,73" = 1005.73 (space as thousands)\n- "$2,049.99" = 2049.99 (US format)\n- If trip shows Canceled AND has a pay amount, set status "partial" and include the amount\n- If trip shows Canceled with NO pay, set amount to 0 and status "canceled"\n\nRespond ONLY with valid JSON array:\n[{"id":"TRIPID","from":"City, ST","to":"City, ST","miles":191,"amount":700.72,"status":"paid"}]';
-  try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',max_tokens:2000,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:imgMediaType,data:imgBase64}},
-          {type:'text',text:prompt}
-        ]}]
-      })
-    });
-    var data=await resp.json();
-    if(!resp.ok)throw new Error(data.error?.message||'API error '+resp.status);
-    var txt=data.content.filter(function(c){return c.type==='text';}).map(function(c){return c.text;}).join('');
-    txt=txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
-    var parsed=JSON.parse(txt);
-    if(!Array.isArray(parsed)||!parsed.length)throw new Error('Нет данных');
-    trips=[];debugData=[];
-    parsed.forEach(function(t){
-      var sl=(t.status||'paid').toLowerCase();
-      var isCanceled=sl==='canceled';
-      trips.push({
-        id:t.id||('AI-'+Math.random().toString(36).slice(2,7).toUpperCase()),
-        from:(t.from||'—').slice(0,50),to:(t.to||'—').slice(0,50),
-        miles:parseInt(t.miles)||0,
-        rate:isCanceled?0:Math.abs(parseFloat(t.amount)||0),
-        pct:100,canceled:isCanceled,statusLabel:sl==='partial'?'partial':isCanceled?'canceled':'paid'
-      });
-      debugData.push({id:t.id,rate:t.amount,method:'AI',sl:sl,preview:t.from+' → '+t.to});
-    });
-    var paid=trips.filter(function(t){return !t.canceled;}).length;
-    var canc=trips.filter(function(t){return t.canceled;}).length;
-    var gross=trips.filter(function(t){return !t.canceled;}).reduce(function(s,t){return s+t.rate;},0);
-    st.className='status ok';st.textContent='✓ AI нашёл '+trips.length+' | Оплач: '+paid+' | Отмен: '+canc+' | Гросс: '+fmt(gross);
-    ai.classList.remove('show');btn.disabled=false;
-    renderDebug();goPage(1);
-  }catch(err){
-    ai.classList.remove('show');btn.disabled=false;
-    st.className='status err';st.textContent='✗ Ошибка AI: '+err.message;
-  }
-}
-
-// ══ TRIPS RENDER ══
+// ════════════════════════════════════════════
+// TRIPS PAGE
+// ════════════════════════════════════════════
 function renderTrips(){
   var c=document.getElementById('tripsContainer'),gs=document.getElementById('grossSummary');
   if(!trips.length){gs.innerHTML='';c.innerHTML='<div class="empty"><div class="ic">📋</div>Загрузи данные на шаге ①</div>';return;}
@@ -952,7 +842,9 @@ function getValues(){
   };
 }
 
-// ══ INVOICE ══
+// ════════════════════════════════════════════
+// INVOICE
+// ════════════════════════════════════════════
 function renderInvoice(){
   var c=document.getElementById('invoiceContainer');
   if(!trips.length){c.innerHTML='<div class="empty"><div class="ic">🧾</div>Нет данных</div>';return;}
@@ -964,18 +856,19 @@ function renderInvoice(){
   var paidTrips=trips.filter(function(t){return !t.canceled;});
   var canceledTrips=trips.filter(function(t){return t.canceled;});
 
-  // Auto-save
+  // Auto-save to Firebase
   var record={id:'inv_'+Date.now(),savedAt:new Date().toISOString(),driver:v.driver,truck:v.truck,week:v.week,company:v.company,gross:v.gross,driverAmt:driverAmt,driverPayOn:v.driverPayOn,companyNet:companyNet,tripCount:paidTrips.length,canceledCount:canceledTrips.length,totalMiles:v.totalMiles,trips:trips,driverPayPct:v.driverPayPct,dp:v.dp,ins:v.ins,eld:v.eld,ifta:v.ifta,fuel:v.fuel,other:v.other};
-  var ex=getHistory();
-  if(!(ex.length&&ex[0].driver===v.driver&&ex[0].week===v.week&&Math.abs(ex[0].gross-v.gross)<0.01))saveToHistory(record);
+  getHistory().then(function(existing){
+    var dup=existing.length&&existing[0].driver===v.driver&&existing[0].week===v.week&&Math.abs(existing[0].gross-v.gross)<0.01;
+    if(!dup) saveToHistory(record);
+  });
 
   var tripRows=paidTrips.map(function(t,i){
     var bs=t.statusLabel==='partial'?'<span class="inv-status inv-s-partial">CANCELED+PAID</span>':'<span class="inv-status inv-s-paid">PAID</span>';
     return'<tr><td class="trip-num">'+(i+1)+'</td>'+
       '<td style="font-family:var(--mono);font-size:11px;color:var(--acc)">'+t.id+'</td>'+
       '<td>'+t.from+'</td><td>'+t.to+'</td>'+
-      '<td>'+bs+'</td>'+
-      '<td class="right">'+fmt(t.rate*t.pct/100)+'</td></tr>';
+      '<td>'+bs+'</td><td class="right">'+fmt(t.rate*t.pct/100)+'</td></tr>';
   }).join('');
   var canceledRows=canceledTrips.map(function(t,i){
     return'<tr class="canc-row"><td class="trip-num">C'+(i+1)+'</td>'+
@@ -989,7 +882,6 @@ function renderInvoice(){
   var otherRow=v.other>0?'<tr><td>Other Deductions</td><td class="ded-neg">'+fmt(-v.other)+'</td></tr>':'';
   var stmtNum='STMT-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*9000)+1000);
 
-  // Miles banner — ONCE, not in every row
   var milesBanner='';
   if(v.totalMiles>0){
     var avgRpM=v.paidMiles>0?'$'+(v.gross/v.paidMiles).toFixed(2)+'/mi':'—';
@@ -1000,7 +892,6 @@ function renderInvoice(){
     '</div>';
   }
 
-  // Driver Pay row for deductions — only if enabled
   var driverPayRow='';
   if(v.driverPayOn){
     driverPayRow='<tr class="row-spacer"><td colspan="2"></td></tr>'+
@@ -1054,52 +945,17 @@ function renderInvoice(){
 function resetAll(){
   trips=[];debugData=[];
   document.getElementById('rawInput').value='';
-  ['stText','stExcel','stImage'].forEach(function(id){var el=document.getElementById(id);if(el){el.className='status idle';el.textContent='Ожидание...';}});
-  document.getElementById('weekPeriod').value='';document.getElementById('driverName').value='';document.getElementById('truckNum').value='';
-  document.getElementById('fuel').value='0';document.getElementById('other').value='0';
-  clearFile();clearImg();
-  document.getElementById('debugPanel').classList.remove('show');document.getElementById('debugPanel').innerHTML='';
+  document.getElementById('stText').className='status idle'; document.getElementById('stText').textContent='Ожидание данных...';
+  document.getElementById('weekPeriod').value=''; document.getElementById('driverName').value=''; document.getElementById('truckNum').value='';
+  document.getElementById('fuel').value='0'; document.getElementById('other').value='0';
+  document.getElementById('debugPanel').classList.remove('show'); document.getElementById('debugPanel').innerHTML='';
   goPage(0);
-}
-
-function exportXLSX(){
-  var v=getValues();
-  var driverAmt=v.gross*v.driverPayPct/100;
-  var da=v.gross*v.dp/100;
-  var totalDed=da+v.ins+v.eld+v.ifta+v.fuel+v.other;
-  var companyNet=v.gross-driverAmt-totalDed;
-  var paid=trips.filter(function(t){return !t.canceled;});
-  var rows=[];
-  rows.push([v.company.toUpperCase()]);rows.push(['Driver Statement']);
-  rows.push(['Driver: '+v.driver]);rows.push(['Truck: #'+v.truck]);rows.push(['Week: '+v.week]);rows.push([]);
-  rows.push(['#','Trip ID','From','To','Miles','Rate ($)','Amount ($)']);
-  paid.forEach(function(t,i){rows.push([i+1,t.id,t.from,t.to,t.miles||'',+t.rate.toFixed(2),+(t.rate*t.pct/100).toFixed(2)]);});
-  rows.push([]);rows.push(['','','','','','Gross:',+v.gross.toFixed(2)]);rows.push([]);
-  rows.push(['DEDUCTIONS']);
-  if(v.driverPayOn)rows.push(['','Driver Pay ('+v.driverPayPct+'%)','','','','',+driverAmt.toFixed(2)]);
-  rows.push(['','Dispatch ('+v.dp+'%)','','','','',-+da.toFixed(2)]);
-  rows.push(['','Insurance','','','','',-v.ins]);rows.push(['','ELD','','','','',-v.eld]);
-  rows.push(['','IFTA / Safety','','','','',-v.ifta]);
-  if(v.fuel>0)rows.push(['','Fuel Advance','','','','',-v.fuel]);
-  if(v.other>0)rows.push(['','Other','','','','',-v.other]);
-  rows.push(['','Total Deductions','','','','',-+totalDed.toFixed(2)]);rows.push([]);
-  if(v.driverPayOn)rows.push(['','Driver Take Home','','','','',+driverAmt.toFixed(2)]);
-  rows.push(['','Company Net','','','','',+companyNet.toFixed(2)]);
-  var canceled=trips.filter(function(t){return t.canceled;});
-  if(canceled.length){rows.push([]);rows.push(['CANCELED']);canceled.forEach(function(t,i){rows.push([i+1,t.id,t.from,t.to,t.miles||'']);});}
-  var ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:4},{wch:15},{wch:30},{wch:30},{wch:8},{wch:16},{wch:12}];
-  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Statement');
-  XLSX.writeFile(wb,'YURT_'+v.driver.replace(/\s+/g,'_')+'_Truck'+v.truck+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 function downloadPDF(){
   var area=document.getElementById('invoicePrintArea');
   if(!area){alert('Сначала сформируй инвойс');return;}
   var v=getValues();
-  var fname='YURT_'+v.driver.replace(/\s+/g,'_')+'_Truck'+v.truck+'_'+v.week.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf';
-
-  // Use print-to-PDF via hidden iframe for clean output
   var styles=Array.from(document.querySelectorAll('style')).map(function(s){return'<style>'+s.innerHTML+'</style>';}).join('');
   var links='<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">';
   var printHtml='<!DOCTYPE html><html><head><meta charset="UTF-8">'+links+styles+
@@ -1107,14 +963,10 @@ function downloadPDF(){
     '.invoice-wrap{box-shadow:none!important;border:1px solid #ccc!important;border-radius:0!important;}</style>'+
     '<script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close();},500);},600);}<\/script>'+
     '</head><body>'+area.outerHTML+'</body></html>';
-
   var blob=new Blob([printHtml],{type:'text/html'});
   var url=URL.createObjectURL(blob);
   var win=window.open(url,'_blank','width=900,height=700');
-  if(!win){
-    // Fallback: direct print on this page
-    window.print();
-  }
+  if(!win)window.print();
   setTimeout(function(){URL.revokeObjectURL(url);},5000);
 }
 </script>
