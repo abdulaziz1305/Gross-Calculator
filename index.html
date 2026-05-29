@@ -5,10 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YURT — Gross Calculator</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
@@ -18,6 +16,30 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);min-height:10
 input[type=number]{-moz-appearance:textfield;}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
 
+/* ── PAYWALL SCREEN ── */
+#paywallScreen{min-height:100vh;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1714 0%,#2d2620 50%,#1a1714 100%);position:relative;overflow:hidden;padding:20px;}
+#paywallScreen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(200,135,58,.15) 0%,transparent 60%);}
+.paywall-card{background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:440px;position:relative;z-index:1;box-shadow:0 24px 80px rgba(0,0,0,.4);}
+.pw-icon{font-size:48px;text-align:center;margin-bottom:16px;}
+.pw-title{font-family:var(--serif);font-size:22px;font-weight:800;color:var(--txt);text-align:center;margin-bottom:8px;}
+.pw-sub{font-size:13px;color:var(--txt2);text-align:center;line-height:1.6;margin-bottom:24px;}
+.pw-plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px;}
+.pw-plan{border:2px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;transition:all .2s;}
+.pw-plan.featured{border-color:var(--acc);background:#fffbf5;}
+.pw-plan .pp-trucks{font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.pw-plan .pp-price{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--txt);}
+.pw-plan .pp-price span{font-size:11px;font-weight:400;color:var(--txt3);}
+.pw-plan.featured .pp-price{color:var(--acc);}
+.pw-plan .pp-free{font-size:13px;font-weight:700;color:var(--grn);}
+.pw-contact{background:var(--bg);border-radius:12px;padding:16px;text-align:center;}
+.pw-contact p{font-size:13px;color:var(--txt2);margin-bottom:12px;}
+.pw-wa{display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;}
+.pw-wa:hover{background:#1da851;transform:translateY(-1px);}
+.pw-logout{background:none;border:1px solid var(--border);color:var(--txt3);border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;margin-top:12px;display:block;width:100%;transition:all .2s;}
+.pw-logout:hover{border-color:var(--red);color:var(--red);}
+.pw-expiry-info{background:var(--red2);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:16px;text-align:center;display:none;}
+
+/* LOGIN */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1714 0%,#2d2620 50%,#1a1714 100%);position:relative;overflow:hidden;}
 #loginScreen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(200,135,58,.15) 0%,transparent 60%),radial-gradient(ellipse at 70% 70%,rgba(200,135,58,.08) 0%,transparent 50%);}
 .login-card{background:#fff;border-radius:20px;padding:48px 44px;width:100%;max-width:400px;position:relative;z-index:1;box-shadow:0 24px 80px rgba(0,0,0,.4);}
@@ -33,6 +55,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .login-btn:disabled{opacity:.6;cursor:not-allowed;}
 .login-err{background:#fdf0ee;color:var(--red);border:1px solid #f5c6c0;border-radius:8px;padding:10px 14px;font-size:12px;margin-top:12px;display:none;}
 
+/* APP */
 #app{display:none;}
 header{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.04);}
 .hdr-left{display:flex;align-items:center;gap:12px;}
@@ -44,8 +67,12 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;disp
 .logout-btn:hover{border-color:var(--red);color:var(--red);}
 .admin-btn{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s;}
 .admin-btn:hover{background:var(--acc2);}
-/* Sync dot */
-#syncDot{width:8px;height:8px;border-radius:50%;background:#2dce82;display:inline-block;transition:background .3s;}
+
+/* EXPIRY BADGE in header */
+.expiry-badge{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:10px;font-weight:700;}
+.expiry-ok{background:var(--grn2);color:var(--grn);}
+.expiry-warn{background:#fff8e6;color:#b07d10;}
+.expiry-exp{background:var(--red2);color:var(--red);}
 
 .tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;padding:0 16px;}
 .tab-btn{flex-shrink:0;padding:13px 14px;border:none;background:none;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
@@ -60,12 +87,6 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;disp
 .card-head .dot{width:8px;height:8px;border-radius:50%;background:var(--acc);flex-shrink:0;}
 .card-body{padding:18px;}
 
-.mode-tabs{display:flex;gap:0;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:16px;}
-.mode-tab{flex:1;padding:10px;border:none;background:none;font-family:var(--sans);font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer;border-radius:7px;transition:all .2s;text-align:center;}
-.mode-tab.active{background:#fff;color:var(--txt);box-shadow:var(--shadow);}
-.mode-panel{display:none;}
-.mode-panel.active{display:block;}
-
 .howto{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
 .howto h4{font-size:11px;font-weight:700;color:var(--txt);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;}
 .how-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:7px;font-size:12px;line-height:1.5;}
@@ -73,58 +94,22 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;disp
 .how-step .n{background:#1a1714;color:var(--acc);font-weight:700;font-size:9px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
 .how-step p{color:var(--txt2);}
 .how-step strong{color:var(--txt);}
-
 textarea{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;color:var(--txt);font-family:var(--mono);font-size:11px;padding:14px;resize:none;height:200px;outline:none;transition:border-color .2s;line-height:1.7;}
 textarea:focus{border-color:var(--acc);background:#fff;}
 textarea::placeholder{color:var(--txt3);}
-
-.file-drop{border:2px dashed var(--border2);border-radius:10px;padding:30px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);margin-bottom:12px;}
-.file-drop:hover,.file-drop.dragover{border-color:var(--acc);background:#fffbf5;}
-.file-drop .fd-icon{font-size:32px;margin-bottom:8px;}
-.file-drop .fd-txt{font-size:13px;font-weight:600;color:var(--txt2);margin-bottom:4px;}
-.file-drop .fd-sub{font-size:11px;color:var(--txt3);}
-.file-drop input[type=file]{display:none;}
-.file-chosen{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;}
-.file-chosen .fc-name{font-weight:600;flex:1;font-family:var(--mono);}
-.file-chosen .fc-size{color:var(--txt3);}
-.fc-clear{background:none;border:none;cursor:pointer;color:var(--txt3);font-size:16px;padding:2px 6px;border-radius:4px;}
-.fc-clear:hover{color:var(--red);}
-
-.img-drop{border:2px dashed var(--border2);border-radius:10px;padding:30px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);margin-bottom:12px;}
-.img-drop:hover,.img-drop.dragover{border-color:var(--acc);background:#fffbf5;}
-.img-drop .id-icon{font-size:32px;margin-bottom:8px;}
-.img-drop .id-txt{font-size:13px;font-weight:600;color:var(--txt2);margin-bottom:4px;}
-.img-drop .id-sub{font-size:11px;color:var(--txt3);}
-.img-drop input[type=file]{display:none;}
-.img-preview-wrap{position:relative;margin-bottom:12px;}
-.img-preview{width:100%;max-height:300px;object-fit:contain;border-radius:10px;border:1px solid var(--border);}
-.img-preview-clear{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;}
-
-.ai-processing{background:linear-gradient(135deg,#1a1714,#2d2620);border-radius:10px;padding:16px;margin-bottom:12px;display:none;}
-.ai-processing.show{display:block;}
-.ai-proc-inner{display:flex;align-items:center;gap:12px;}
-.ai-spinner{width:20px;height:20px;border:2px solid rgba(200,135,58,.3);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.ai-proc-txt{font-size:12px;color:rgba(255,255,255,.8);font-family:var(--mono);}
-.ai-proc-txt strong{color:var(--acc);}
 
 .status{border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:11px;margin-top:10px;min-height:36px;}
 .status.idle{background:var(--bg);color:var(--txt3);border:1px solid var(--border);}
 .status.ok{background:var(--grn2);color:var(--grn);border:1px solid rgba(45,122,95,.2);}
 .status.err{background:var(--red2);color:var(--red);border:1px solid rgba(192,57,43,.2);}
 .status.warn{background:#fff8e6;color:#b07d10;border:1px solid #e8c96b;}
-.status.loading{background:linear-gradient(90deg,#f5f0e8,#fffbf5,#f5f0e8);background-size:200% 100%;animation:shimmer 1.5s infinite;color:var(--txt3);border:1px solid var(--border);}
-@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 
 .btn{width:100%;border:none;border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:700;padding:14px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;margin-top:10px;transition:all .15s;}
 .btn:active{transform:scale(.98);}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
 .btn-dark{background:#1a1714;color:var(--acc);}
 .btn-dark:hover:not(:disabled){background:#2d2620;}
-.btn-pdf{background:var(--blue);color:#fff;}
-.btn-pdf:hover{background:#1e4a6e;}
 .btn-dbg{background:rgba(200,135,58,.1);color:var(--acc);border:1px solid rgba(200,135,58,.25);border-radius:8px;padding:8px 14px;font-size:11px;font-family:var(--sans);font-weight:600;cursor:pointer;margin-top:8px;width:100%;}
-
 .debug-panel{background:#1a1714;border-radius:10px;padding:14px;margin-top:10px;display:none;}
 .debug-panel.show{display:block;}
 .debug-panel h4{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--acc);margin-bottom:8px;letter-spacing:.8px;}
@@ -145,13 +130,10 @@ textarea::placeholder{color:var(--txt3);}
 .ded-label span{display:block;font-size:10px;color:var(--txt3);font-family:var(--mono);margin-top:1px;}
 .ded-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-family:var(--mono);font-size:14px;font-weight:600;padding:8px 12px;width:110px;text-align:right;outline:none;transition:all .2s;}
 .ded-input:focus{border-color:var(--acc);background:#fff;}
-
 .ded-row.driver-pay-row{background:rgba(45,122,95,.04);border-radius:8px;padding:11px 10px;margin:-2px -2px 4px;border:1px solid rgba(45,122,95,.15);}
 .ded-row.driver-pay-row .ded-label{color:var(--grn);}
 .ded-row.driver-pay-row .ded-input{border-color:rgba(45,122,95,.3);color:var(--grn);}
 .ded-row.driver-pay-row.disabled-row{opacity:.4;pointer-events:none;}
-
-.toggle-wrap{display:flex;align-items:center;gap:8px;}
 .toggle{position:relative;width:36px;height:20px;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;}
 .toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border2);border-radius:20px;transition:.2s;}
@@ -161,7 +143,7 @@ textarea::placeholder{color:var(--txt3);}
 .driver-pay-label-wrap{display:flex;flex-direction:column;}
 .driver-pay-label-wrap .dpl-title{font-size:13px;font-weight:500;color:var(--grn);}
 .driver-pay-label-wrap .dpl-sub{font-size:10px;color:var(--txt3);font-family:var(--mono);margin-top:1px;}
-.driver-pay-label-wrap .dpl-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;}
+.dpl-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;}
 .tag-company{background:var(--grn2);color:var(--grn);}
 .tag-owner{background:var(--blue2);color:var(--blue);}
 
@@ -169,7 +151,6 @@ textarea::placeholder{color:var(--txt3);}
 .gb-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(45,208,122,.6);font-family:var(--mono);}
 .gb-val{font-size:28px;font-weight:800;font-family:var(--mono);color:#2dce82;}
 .gb-sub{font-size:11px;color:rgba(45,208,122,.5);font-family:var(--mono);margin-top:2px;}
-
 .trip-item{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;box-shadow:var(--shadow);}
 .trip-item.canceled{opacity:.5;background:var(--bg);}
 .trip-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
@@ -227,12 +208,10 @@ textarea::placeholder{color:var(--txt3);}
 .inv-info-block .lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
 .inv-info-block .val{font-size:13px;font-weight:700;color:var(--txt);}
 .inv-info-block .val span{font-family:var(--mono);color:var(--acc);}
-
 .inv-miles-banner{background:#1a2a40;padding:10px 32px;display:flex;align-items:center;gap:28px;border-bottom:1px solid rgba(44,95,138,.3);}
 .imb-item{display:flex;align-items:center;gap:8px;}
 .imb-label{font-size:10px;color:rgba(255,255,255,.4);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
 .imb-val{font-size:15px;font-weight:800;font-family:var(--mono);color:#60a5fa;margin-left:4px;}
-
 .inv-table-wrap{padding:0 32px;}
 .inv-table{width:100%;border-collapse:collapse;font-size:12px;margin:20px 0;}
 .inv-table thead tr{border-bottom:2px solid var(--border2);}
@@ -251,7 +230,6 @@ textarea::placeholder{color:var(--txt3);}
 .inv-s-paid{background:var(--grn2);color:var(--grn);}
 .inv-s-canceled{background:var(--bg3);color:var(--txt3);}
 .inv-s-partial{background:var(--blue2);color:var(--blue);}
-
 .inv-deductions{padding:0 32px 20px;}
 .inv-ded-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:10px;font-family:var(--mono);padding-top:16px;border-top:1px solid var(--border);}
 .inv-ded-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -265,12 +243,10 @@ textarea::placeholder{color:var(--txt3);}
 .row-driver-pay td:last-child{color:#16a34a;font-size:14px;}
 .row-company-net td{padding:9px 10px !important;color:var(--txt2);font-size:13px;}
 .row-spacer td{padding:4px 0 !important;border:none !important;}
-
 .inv-footer{background:#1a1714;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;}
 .inv-footer .ft-txt{font-size:10px;color:rgba(255,255,255,.3);}
 .inv-footer .ft-acc{font-family:var(--mono);font-size:11px;color:var(--acc);}
 .invoice-wrap{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow2);margin-bottom:16px;}
-
 .new-week-wrap{display:flex;align-items:center;gap:12px;margin:20px 0 0;}
 .new-week-line{flex:1;height:1px;background:var(--border2);}
 .new-week-label{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
@@ -279,22 +255,33 @@ textarea::placeholder{color:var(--txt3);}
 .nav-link{display:flex;justify-content:center;margin-top:12px;}
 .nav-link button{background:none;border:none;color:var(--acc);font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;}
 
+/* ADMIN MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3);}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.3);}
 .modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .modal-head h3{font-size:16px;font-weight:700;}
 .modal-close{background:none;border:1px solid var(--border);color:var(--txt2);border-radius:8px;width:32px;height:32px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .modal-close:hover{background:var(--red2);color:var(--red);}
 .modal-body{padding:24px;}
 .user-list{margin-bottom:20px;}
-.user-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:12px;}
-.user-row .uname{font-weight:700;flex:1;font-family:var(--mono);}
+.user-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:12px;flex-wrap:wrap;}
+.user-row .uname{font-weight:700;font-family:var(--mono);min-width:80px;}
 .user-row .uname-real{font-size:11px;color:var(--txt2);flex:1;}
 .user-row .urole{font-size:10px;color:var(--txt3);background:var(--border);padding:2px 8px;border-radius:10px;}
 .user-row .urole.admin{background:#fff3e0;color:#b07d10;border:1px solid #f0d090;}
-.user-row .udelete{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:4px 6px;}
+/* expiry inline in user row */
+.user-exp{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:10px;font-weight:700;}
+.uexp-ok{background:var(--grn2);color:var(--grn);}
+.uexp-warn{background:#fff8e6;color:#b07d10;}
+.uexp-exp{background:var(--red2);color:var(--red);}
+.uexp-none{background:var(--bg3);color:var(--txt3);}
+.user-row .udelete{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:4px 6px;margin-left:auto;}
 .user-row .udelete:hover{color:var(--red);}
+/* expiry edit button */
+.uext-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:10px;color:var(--blue);cursor:pointer;transition:all .15s;}
+.uext-btn:hover{border-color:var(--blue);background:var(--blue2);}
+
 .add-user-form{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;}
 .add-user-form h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;color:var(--txt2);}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
@@ -304,15 +291,44 @@ textarea::placeholder{color:var(--txt3);}
 .add-btn{width:100%;background:#1a1714;color:var(--acc);border:none;border-radius:8px;padding:11px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;}
 .add-btn:hover{background:var(--acc);color:#1a1714;}
 
+/* PRICING TIERS BOX in admin */
+.pricing-box{background:linear-gradient(135deg,#1a1714,#2d2620);border-radius:12px;padding:16px 18px;margin-bottom:20px;}
+.pricing-box h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--acc);margin-bottom:12px;font-family:var(--mono);}
+.tier-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.tier-row:last-child{border-bottom:none;}
+.tier-trucks{font-size:12px;color:rgba(255,255,255,.7);font-family:var(--mono);}
+.tier-price{font-size:13px;font-weight:700;font-family:var(--mono);}
+.tier-free{color:#2dce82;}
+.tier-paid{color:var(--acc);}
+.stats-row{display:flex;gap:10px;margin-bottom:16px;}
+.stat-card{flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.stat-card .sc-num{font-size:24px;font-weight:800;font-family:var(--mono);color:var(--acc);}
+.stat-card .sc-label{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
 .btn-pdf-dl{display:block;width:100%;margin-top:14px;padding:16px;background:linear-gradient(135deg,#2d7a5f 0%,#1e5c48 100%);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(45,122,95,.35);}
 .btn-pdf-dl:hover{background:linear-gradient(135deg,#1e5c48 0%,#144030 100%);transform:translateY(-1px);}
 .btn-pdf-dl:active{transform:scale(.98);}
+.btn-pdf-dl:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* ── CONFIRM DELETE MODAL ── */
+.confirm-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;}
+.confirm-modal{background:#fff;border-radius:16px;width:100%;max-width:360px;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden;}
+.confirm-modal-head{padding:20px 24px 0;}
+.confirm-modal-icon{font-size:40px;text-align:center;margin-bottom:10px;}
+.confirm-modal-title{font-size:17px;font-weight:700;color:var(--txt);text-align:center;margin-bottom:6px;}
+.confirm-modal-sub{font-size:13px;color:var(--txt2);text-align:center;line-height:1.5;margin-bottom:20px;}
+.confirm-modal-actions{display:flex;gap:0;border-top:1px solid var(--border);}
+.confirm-modal-actions button{flex:1;padding:16px;border:none;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
+.confirm-modal-cancel{background:#fff;color:var(--txt2);border-right:1px solid var(--border)!important;}
+.confirm-modal-cancel:hover{background:var(--bg);}
+.confirm-modal-confirm{background:#fff;color:var(--red);}
+.confirm-modal-confirm:hover{background:var(--red2);}
 
 @media print{
   @page{size:A4;margin:8mm 10mm;}
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
   body{background:#fff !important;}
-  header,.tabs,#page0,#page1,#page2,#page4,.nav-link,.btn,.btn-dark,.btn-pdf,.btn-reset,.new-week-wrap,.btn-pdf-dl,#adminModal{display:none !important;}
+  header,.tabs,#page0,#page1,#page2,#page4,.nav-link,.btn,.btn-dark,.btn-reset,.new-week-wrap,.btn-pdf-dl,#adminModal,#paywallScreen{display:none !important;}
   .invoice-wrap{box-shadow:none !important;border:1px solid #ccc !important;border-radius:0 !important;}
   #page3{display:block !important;padding:0 !important;max-width:100% !important;}
 }
@@ -320,7 +336,39 @@ textarea::placeholder{color:var(--txt3);}
 </head>
 <body>
 
-<div id="loginScreen">
+<!-- ══ PAYWALL ══ -->
+<div id="paywallScreen">
+  <div class="paywall-card">
+    <div class="pw-icon">🔒</div>
+    <div class="pw-title">Подписка истекла</div>
+    <div class="pw-expiry-info" id="pwExpiryInfo"></div>
+    <div class="pw-sub">Для продолжения работы свяжись с нами для продления подписки.</div>
+    <div class="pw-plans">
+      <div class="pw-plan">
+        <div class="pp-trucks">1 трак</div>
+        <div class="pp-free">FREE</div>
+      </div>
+      <div class="pw-plan featured">
+        <div class="pp-trucks">2–5 траков</div>
+        <div class="pp-price">$19<span>/мес</span></div>
+      </div>
+      <div class="pw-plan">
+        <div class="pp-trucks">5+ траков</div>
+        <div class="pp-price">$49<span>/мес</span></div>
+      </div>
+    </div>
+    <div class="pw-contact">
+      <p>Напиши нам в Telegram — продлим за 5 минут</p>
+      <a class="pw-wa" id="pwWaLink" href="https://wa.me/19295406565" target="_blank">
+        💬 Telegram
+      </a>
+    </div>
+    <button class="pw-logout" onclick="doLogout()">← Выйти из аккаунта</button>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen" style="display:none">
   <div class="login-card">
     <div class="login-logo"><div class="badge">YURT</div><p>TRUCKING LLC · Driver Portal</p></div>
     <div class="login-field"><label>Логин</label><input type="text" id="loginUser" placeholder="username" autocomplete="username"></div>
@@ -330,11 +378,12 @@ textarea::placeholder{color:var(--txt3);}
   </div>
 </div>
 
+<!-- ══ APP ══ -->
 <div id="app">
   <header>
     <div class="hdr-left"><div class="hdr-logo">YURT</div><div class="hdr-title">Gross Calculator</div></div>
     <div class="hdr-right">
-      <span id="syncDot" style="width:8px;height:8px;border-radius:50%;background:#9e9890;display:inline-block;transition:background .3s;" title="Sync"></span>
+      <span id="expiryBadge" class="expiry-badge" style="display:none"></span>
       <span class="hdr-user" id="currentUserLabel"></span>
       <button class="admin-btn" id="adminBtn" onclick="openAdmin()" style="display:none">⚙ Пользователи</button>
       <button class="logout-btn" onclick="doLogout()">Выйти</button>
@@ -347,36 +396,33 @@ textarea::placeholder{color:var(--txt3);}
     <button class="tab-btn" onclick="goPage(3)" id="tab3"><span class="tn">④</span>Инвойс</button>
     <button class="tab-btn" onclick="goPage(4)" id="tab4"><span class="tn">📚</span>История</button>
   </div>
-
   <div class="page active" id="page0">
     <div class="card">
-      <div class="card-head"><div class="dot"></div>Загрузи данные о поездках</div>
+      <div class="card-head"><div class="dot"></div>Данные из Amazon Relay</div>
       <div class="card-body">
-        <div id="modeText">
-          <div class="howto">
-            <h4>📋 Как скопировать из Amazon Relay</h4>
-            <div class="how-step"><div class="n">1</div><p>Открой <strong>Amazon Relay → Trips</strong></p></div>
-            <div class="how-step"><div class="n">2</div><p>📱 Телефон: зажми → <strong>"Выбрать всё"</strong> → Копировать</p></div>
-            <div class="how-step"><div class="n">3</div><p>💻 Компьютер: <strong>Ctrl+A</strong> → <strong>Ctrl+C</strong></p></div>
-          </div>
-          <textarea id="rawInput" placeholder="Вставь сюда скопированный текст из Amazon Relay..."></textarea>
-          <div class="status idle" id="stText">Ожидание данных...</div>
-          <button class="btn btn-dark" onclick="parseTextAndGo()">⚡ Обработать →</button>
-          <button class="btn-dbg" onclick="toggleDebug()">🔍 Детали парсинга</button>
-          <div class="debug-panel" id="debugPanel"></div>
+        <div class="howto">
+          <h4>📋 Как скопировать из Amazon Relay</h4>
+          <div class="how-step"><div class="n">1</div><p>Открой <strong>Amazon Relay → Trips</strong></p></div>
+          <div class="how-step"><div class="n">2</div><p>📱 Телефон: зажми → <strong>"Выбрать всё"</strong> → Копировать</p></div>
+          <div class="how-step"><div class="n">3</div><p>💻 Компьютер: <strong>Ctrl+A</strong> → <strong>Ctrl+C</strong></p></div>
         </div>
+        <textarea id="rawInput" placeholder="Вставь сюда скопированный текст из Amazon Relay..."></textarea>
+        <div class="status idle" id="stText">Ожидание данных...</div>
+        <button class="btn btn-dark" onclick="parseTextAndGo()">⚡ Обработать →</button>
+        <button class="btn-dbg" onclick="toggleDebug()">🔍 Детали парсинга</button>
+        <div class="debug-panel" id="debugPanel"></div>
       </div>
     </div>
   </div>
-
   <div class="page" id="page1">
+    <div id="driverLimitBanner" style="display:none;background:var(--blue2);border:1px solid rgba(44,95,138,.2);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:var(--blue);line-height:1.6;"></div>
     <div class="card">
       <div class="card-head"><div class="dot"></div>Компания и водитель</div>
       <div class="card-body">
-        <div class="field"><label>Название компании</label><input id="companyName" type="text" placeholder="YURT Trucking LLC" value="YURT Trucking LLC"></div>
-        <div class="field"><label>Имя водителя</label><input id="driverName" type="text" placeholder="Например: R. Khushvakhtov"></div>
-        <div class="field"><label>Номер трака</label><input id="truckNum" type="text" placeholder="Например: 26"></div>
-        <div class="field"><label>Период (неделя)</label><input id="weekPeriod" type="text" placeholder="Например: May 9–16, 2025"></div>
+        <div class="field"><label>Название компании</label><input id="companyName" type="text" value="YURT Trucking LLC"></div>
+        <div class="field"><label>Имя водителя</label><input id="driverName" type="text" placeholder="R. Khushvakhtov"></div>
+        <div class="field"><label>Номер трака</label><input id="truckNum" type="text" placeholder="26"></div>
+        <div class="field"><label>Период (неделя)</label><input id="weekPeriod" type="text" placeholder="May 9–16, 2025"></div>
       </div>
     </div>
     <div class="card">
@@ -384,39 +430,30 @@ textarea::placeholder{color:var(--txt3);}
       <div class="card-body">
         <div class="ded-row driver-pay-row" id="driverPayRow">
           <div style="display:flex;align-items:center;gap:12px;flex:1">
-            <label class="toggle" title="Вкл/выкл Driver Pay">
-              <input type="checkbox" id="driverPayToggle" checked onchange="toggleDriverPay()">
-              <span class="toggle-slider"></span>
-            </label>
+            <label class="toggle"><input type="checkbox" id="driverPayToggle" checked onchange="toggleDriverPay()"><span class="toggle-slider"></span></label>
             <div class="driver-pay-label-wrap">
-              <span class="dpl-title">Driver Pay</span>
-              <span class="dpl-sub">% от гросса</span>
+              <span class="dpl-title">Driver Pay</span><span class="dpl-sub">% от гросса</span>
               <span class="dpl-tag tag-company" id="driverPayTag">Company Driver</span>
             </div>
           </div>
           <input class="ded-input" id="driverPay" type="number" value="35" min="0" max="100" style="border-color:rgba(45,122,95,.3);color:var(--grn);">
         </div>
-        <div class="ded-row"><div class="ded-label">Dispatch Charge<span>% от гросса</span></div><input class="ded-input" id="dispatchPct" type="number" value="10" min="0" max="100"></div>
-        <div class="ded-row"><div class="ded-label">Insurance<span>фиксированная $</span></div><input class="ded-input" id="insurance" type="number" value="500" min="0"></div>
-        <div class="ded-row"><div class="ded-label">ELD<span>фиксированная $</span></div><input class="ded-input" id="eld" type="number" value="40" min="0"></div>
-        <div class="ded-row"><div class="ded-label">IFTA / Safety<span>фиксированная $</span></div><input class="ded-input" id="ifta" type="number" value="120" min="0"></div>
-        <div class="ded-row"><div class="ded-label">Fuel Advance<span>фиксированная $</span></div><input class="ded-input" id="fuel" type="number" value="0" min="0"></div>
-        <div class="ded-row"><div class="ded-label">Другие вычеты<span>фиксированная $</span></div><input class="ded-input" id="other" type="number" value="0" min="0"></div>
+        <div class="ded-row"><div class="ded-label">Dispatch Charge<span>% от гросса</span></div><input class="ded-input" id="dispatchPct" type="number" value="10"></div>
+        <div class="ded-row"><div class="ded-label">Insurance<span>фиксированная $</span></div><input class="ded-input" id="insurance" type="number" value="500"></div>
+        <div class="ded-row"><div class="ded-label">ELD<span>фиксированная $</span></div><input class="ded-input" id="eld" type="number" value="40"></div>
+        <div class="ded-row"><div class="ded-label">IFTA / Safety<span>фиксированная $</span></div><input class="ded-input" id="ifta" type="number" value="120"></div>
+        <div class="ded-row"><div class="ded-label">Fuel Advance<span>фиксированная $</span></div><input class="ded-input" id="fuel" type="number" value="0"></div>
+        <div class="ded-row"><div class="ded-label">Другие вычеты<span>фиксированная $</span></div><input class="ded-input" id="other" type="number" value="0"></div>
       </div>
     </div>
     <button class="btn btn-dark" onclick="goPage(2)">→ Смотреть поездки</button>
   </div>
-
   <div class="page" id="page2">
     <div id="grossSummary"></div>
-    <div id="tripsContainer"><div class="empty"><div class="ic">📋</div>Сначала вставь данные на шаге 1</div></div>
+    <div id="tripsContainer"><div class="empty"><div class="ic">📋</div>Вставь данные на шаге ①</div></div>
     <div class="nav-link"><button onclick="goPage(3)">→ Перейти к инвойсу</button></div>
   </div>
-
-  <div class="page" id="page3">
-    <div id="invoiceContainer"><div class="empty"><div class="ic">🧾</div>Нет данных</div></div>
-  </div>
-
+  <div class="page" id="page3"><div id="invoiceContainer"><div class="empty"><div class="ic">🧾</div>Нет данных</div></div></div>
   <div class="page" id="page4">
     <div class="hist-header"><h3>📚 История расчётов</h3><span class="hist-count" id="histCount"></span></div>
     <div class="hist-filter" id="histFilter"></div>
@@ -424,19 +461,50 @@ textarea::placeholder{color:var(--txt3);}
   </div>
 </div>
 
+<!-- ══ ADMIN MODAL ══ -->
 <div class="modal-overlay" id="adminModal">
   <div class="modal">
-    <div class="modal-head"><h3>⚙ Пользователи</h3><button class="modal-close" onclick="closeAdmin()">✕</button></div>
+    <div class="modal-head"><h3>⚙ Управление</h3><button class="modal-close" onclick="closeAdmin()">✕</button></div>
     <div class="modal-body">
+      <!-- Pricing tiers — only show to non-admins or always show correctly -->
+      <div class="pricing-box">
+        <h4>💰 Тарифы</h4>
+        <div class="tier-row"><span class="tier-trucks">1 трак</span><span class="tier-price tier-free">БЕСПЛАТНО</span></div>
+        <div class="tier-row"><span class="tier-trucks">2–5 траков</span><span class="tier-price tier-paid">$19 / мес</span></div>
+        <div class="tier-row"><span class="tier-trucks">5+ траков</span><span class="tier-price tier-paid">$49 / мес</span></div>
+      </div>
+      <!-- Stats -->
+      <div class="stats-row" id="adminStats"></div>
+      <!-- User list -->
       <div class="user-list" id="userList"></div>
+      <!-- Add user -->
       <div class="add-user-form">
         <h4>+ Добавить пользователя</h4>
         <div class="form-grid">
-          <div class="form-field"><label>Логин</label><input type="text" id="newLogin" placeholder="user1"></div>
+          <div class="form-field"><label>Логин</label><input type="text" id="newLogin" placeholder="driver1"></div>
           <div class="form-field"><label>Пароль</label><input type="password" id="newPass" placeholder="••••••••"></div>
           <div class="form-field"><label>Имя</label><input type="text" id="newName" placeholder="R. Khushvakhtov"></div>
           <div class="form-field"><label>Роль</label><select id="newRole"><option value="user">User</option><option value="admin">Admin</option></select></div>
-        </div>
+          <div class="form-field"><label>Лимит водителей</label>
+            <select id="newDriverLimit">
+              <option value="3">3 водителя</option>
+              <option value="5" selected>5 водителей</option>
+              <option value="10">10 водителей</option>
+              <option value="20">20 водителей</option>
+              <option value="0">Без лимита</option>
+            </select>
+          </div>
+          <div class="form-field"><label>Дата истечения</label><input type="date" id="newExpiry"></div>
+          <div class="form-field"><label>Быстро +дней</label>
+            <select id="newExpiryPreset" onchange="applyExpiryPreset()">
+              <option value="">-- выбери --</option>
+              <option value="7">+7 дней</option>
+              <option value="30">+30 дней</option>
+              <option value="90">+90 дней</option>
+              <option value="365">+1 год</option>
+              <option value="never">Бессрочно</option>
+            </select>
+          </div>
         <button class="add-btn" onclick="addUser()">+ Добавить</button>
       </div>
     </div>
@@ -445,9 +513,9 @@ textarea::placeholder{color:var(--txt3);}
 
 <script>
 // ════════════════════════════════════════════
-// FIREBASE CONFIG
+// FIREBASE CONFIG — ТВОЙ
 // ════════════════════════════════════════════
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyDiP38vLYp35V_dj4k0YhWLvPTFuTsBGVU",
   authDomain: "yurt-gross-calculator.firebaseapp.com",
   databaseURL: "https://yurt-gross-calculator-default-rtdb.firebaseio.com",
@@ -459,39 +527,167 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
 
-// Sync dot
-db.ref('.info/connected').on('value', function(snap){
-  var dot = document.getElementById('syncDot');
-  if(!dot) return;
-  dot.style.background = snap.val() ? '#2dce82' : '#c0392b';
-  dot.title = snap.val() ? '🟢 Online' : '🔴 Offline';
-});
+// ════════════════════════════════════════════
+// ANTI-DEVTOOLS / SECURITY LAYER
+// ════════════════════════════════════════════
+(function(){
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+  // Block common DevTools shortcuts
+  document.addEventListener('keydown', function(e){
+    // F12
+    if(e.key === 'F12') { e.preventDefault(); return false; }
+    // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C / Ctrl+U
+    if(e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].indexOf(e.key) > -1){ e.preventDefault(); return false; }
+    if(e.ctrlKey && ['U','u'].indexOf(e.key) > -1){ e.preventDefault(); return false; }
+  });
+
+  // Detect DevTools open (size-based heuristic)
+  var _devtoolsOpen = false;
+  var _devtoolsCheck = function(){
+    var threshold = 160;
+    var widthDiff  = window.outerWidth  - window.innerWidth  > threshold;
+    var heightDiff = window.outerHeight - window.innerHeight > threshold;
+    if(widthDiff || heightDiff){
+      if(!_devtoolsOpen){
+        _devtoolsOpen = true;
+        // Blur/hide invoice area when devtools opens
+        var inv = document.getElementById('invoicePrintArea');
+        if(inv){ inv.style.filter='blur(8px)'; inv.style.userSelect='none'; }
+      }
+    } else {
+      if(_devtoolsOpen){
+        _devtoolsOpen = false;
+        var inv2 = document.getElementById('invoicePrintArea');
+        if(inv2){ inv2.style.filter=''; inv2.style.userSelect=''; }
+      }
+    }
+  };
+  setInterval(_devtoolsCheck, 1000);
+})();
+
+// ════════════════════════════════════════════
+// BILLING CONFIG — РЕДАКТИРУЙ ЗДЕСЬ
+// ════════════════════════════════════════════
+var BILLING = {
+  freeLimit: 1,            // 1 трак бесплатно
+  tgUsername: 'nosirovAb',
+  defaultDriverLimit: 1,   // по умолчанию 1 водитель (бесплатный тариф)
+  plans: [
+    { max: 1,   driverLimit: 1,   price: 'FREE',    label: '1 трак' },
+    { max: 5,  driverLimit: 5,  price: '$19/мес', label: '2–5 траков' },
+    { max: 999, driverLimit: 999, price: '$49/мес', label: '5+ траков' }
+  ]
+};
+
+// ════════════════════════════════════════════
+// EXPIRY CHECK
+// ════════════════════════════════════════════
+function checkExpiry(user) {
+  // Admin никогда не блокируется
+  if (user.role === 'admin') return { ok: true };
+
+  var expiry = user.expiry; // 'YYYY-MM-DD' or 'never' or undefined
+
+  // Нет даты — считаем бесплатным (≤3 трака), не блокируем
+  if (!expiry || expiry === 'never') return { ok: true };
+
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var exp = new Date(expiry);
+  exp.setHours(0,0,0,0);
+
+  var diffDays = Math.ceil((exp - today) / (1000*60*60*24));
+
+  if (diffDays < 0) {
+    return { ok: false, expired: true, days: Math.abs(diffDays),
+      msg: 'Подписка истекла ' + Math.abs(diffDays) + ' дн. назад' };
+  }
+  if (diffDays <= 7) {
+    return { ok: true, warn: true, days: diffDays,
+      msg: 'Подписка истекает через ' + diffDays + ' дн.' };
+  }
+  return { ok: true, expiry: expiry, days: diffDays };
+}
+
+function showExpiryBadge(user) {
+  var badge = document.getElementById('expiryBadge');
+  if (!badge) return;
+  var r = checkExpiry(user);
+  if (user.role === 'admin') { badge.style.display='none'; return; }
+  if (r.warn) {
+    badge.textContent = '⚠ ' + r.days + ' дн.';
+    badge.className = 'expiry-badge expiry-warn';
+    badge.style.display = '';
+  } else if (!r.ok) {
+    badge.textContent = '🔒 Истекла';
+    badge.className = 'expiry-badge expiry-exp';
+    badge.style.display = '';
+  } else if (r.expiry) {
+    badge.textContent = '✓ до ' + r.expiry;
+    badge.className = 'expiry-badge expiry-ok';
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
 
 // ════════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════════
-var SESSION_KEY = 'yurt_fb_v1';
+var SESSION_KEY = 'yurt_fb_v2';
 var currentUser = null, trips = [], debugData = [];
 
-function initDefaultAdmin(){
+// ── Single-device session token ──
+function genToken(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+
+async function validateSessionToken(login, localToken){
+  try {
+    var snap = await db.ref('sessions/'+login).get();
+    if(!snap.exists()) return false;
+    return snap.val() === localToken;
+  } catch(e){ return true; } // offline — allow
+}
+
+async function writeSessionToken(login, token){
+  try { await db.ref('sessions/'+login).set(token); } catch(e){}
+}
+
+function initDefaultAdmin() {
   db.ref('users/admin').once('value').then(function(snap){
-    if(!snap.exists()) db.ref('users/admin').set({pass:'yurt2024',name:'Admin',role:'admin'});
+    if (!snap.exists()) {
+      db.ref('users/admin').set({pass:'yurt2024',name:'Admin',role:'admin'});
+    }
   }).catch(function(){});
 }
 
-async function doLogin(){
+async function doLogin() {
   var u = document.getElementById('loginUser').value.trim();
   var p = document.getElementById('loginPass').value;
-  if(!u||!p) return;
+  if (!u || !p) return;
   var btn = document.getElementById('loginBtn');
   var err = document.getElementById('loginErr');
   btn.textContent = '⏳ Вход...'; btn.disabled = true; err.style.display = 'none';
   try {
     var snap = await db.ref('users/'+u).get();
-    if(snap.exists() && snap.val().pass === p){
-      var user = Object.assign({login:u}, snap.val());
+    if (snap.exists() && snap.val().pass === p) {
+      var user = Object.assign({login: u}, snap.val());
+
+      // ── Generate new session token (kicks out other devices) ──
+      var token = genToken();
+      await writeSessionToken(u, token);
+      user._sessionToken = token;
+
       localStorage.setItem(SESSION_KEY, JSON.stringify(user));
       btn.textContent = 'Войти →'; btn.disabled = false;
+
+      // ── EXPIRY CHECK ──
+      var exp = checkExpiry(user);
+      if (!exp.ok) {
+        showPaywall(user, exp);
+        return;
+      }
       startApp(user);
     } else {
       err.textContent = '✗ Неверный логин или пароль';
@@ -499,12 +695,16 @@ async function doLogin(){
       btn.textContent = 'Войти →'; btn.disabled = false;
     }
   } catch(e) {
-    // Offline fallback
     try {
       var cached = JSON.parse(localStorage.getItem(SESSION_KEY));
-      if(cached && cached.login===u && cached.pass===p){ btn.textContent='Войти →'; btn.disabled=false; startApp(cached); return; }
+      if (cached && cached.login===u && cached.pass===p) {
+        btn.textContent='Войти →'; btn.disabled=false;
+        var exp2 = checkExpiry(cached);
+        if (!exp2.ok) { showPaywall(cached, exp2); return; }
+        startApp(cached); return;
+      }
     } catch(e2){}
-    err.textContent = '✗ Ошибка подключения. Проверь интернет.';
+    err.textContent = '✗ Ошибка подключения.';
     err.style.display = 'block';
     btn.textContent = 'Войти →'; btn.disabled = false;
   }
@@ -512,21 +712,47 @@ async function doLogin(){
 document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 
-function doLogout(){
-  localStorage.removeItem(SESSION_KEY); currentUser=null; trips=[]; debugData=[];
-  document.getElementById('app').style.display='none';
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('loginUser').value=''; document.getElementById('loginPass').value='';
+function showPaywall(user, expInfo) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  var ps = document.getElementById('paywallScreen');
+  ps.style.display = 'flex';
+
+  var infoEl = document.getElementById('pwExpiryInfo');
+  if (expInfo && expInfo.msg) {
+    infoEl.textContent = expInfo.msg;
+    infoEl.style.display = 'block';
+  }
+
+  // Telegram message
+  var msg = 'Привет! Мой логин: ' + (user.login||'') + '. Хочу продлить подписку YURT Gross Calculator.';
+document.getElementById('pwWaLink').href = 'https://t.me/' + BILLING.tgUsername + '?text=' + encodeURIComponent(msg);
 }
 
-function startApp(user){
-  currentUser=user;
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('app').style.display='block';
-  document.getElementById('currentUserLabel').textContent=(user.name||user.login)+(user.role==='admin'?' 👑':'');
-  document.getElementById('adminBtn').style.display=user.role==='admin'?'':'none';
+function doLogout() {
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch(e){}
+  if(cached && cached.login){
+    try { db.ref('sessions/'+cached.login).remove(); } catch(e){}
+  }
+  localStorage.removeItem(SESSION_KEY); currentUser=null; trips=[]; debugData=[];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('paywallScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+function startApp(user) {
+  currentUser = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('paywallScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('currentUserLabel').textContent = (user.name||user.login)+(user.role==='admin'?' 👑':'');
+  document.getElementById('adminBtn').style.display = user.role==='admin' ? '' : 'none';
+  showExpiryBadge(user);
   ['driverName','truckNum','weekPeriod'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('companyName').value='YURT Trucking LLC';
+  document.getElementById('companyName').value = 'YURT Trucking LLC';
   document.getElementById('driverPay').value='35'; document.getElementById('dispatchPct').value='10';
   document.getElementById('insurance').value='500'; document.getElementById('eld').value='40';
   document.getElementById('ifta').value='120'; document.getElementById('fuel').value='0'; document.getElementById('other').value='0';
@@ -536,54 +762,230 @@ function startApp(user){
   document.getElementById('driverPayTag').className='dpl-tag tag-company';
   document.getElementById('rawInput').value=''; trips=[]; debugData=[];
   goPage(0);
+
+  // ── Single-device watchdog: check session token every 30 seconds ──
+  if(user.role !== 'admin' && user._sessionToken) {
+    var _sessionWatchdog = setInterval(async function(){
+      if(!currentUser || currentUser.login !== user.login){ clearInterval(_sessionWatchdog); return; }
+      var valid = await validateSessionToken(user.login, user._sessionToken);
+      if(!valid){
+        clearInterval(_sessionWatchdog);
+        showToast('⚠ Выполнен вход с другого устройства. Сессия завершена.', 'err');
+        setTimeout(function(){ doLogout(); }, 2000);
+      }
+    }, 30000);
+  }
 }
 
 // ════════════════════════════════════════════
-// ADMIN — Firebase
+// ADMIN — User Management with Expiry
 // ════════════════════════════════════════════
-function openAdmin(){ renderUserList(); document.getElementById('adminModal').classList.add('open'); }
-function closeAdmin(){ document.getElementById('adminModal').classList.remove('open'); }
+function openAdmin() { renderAdminStats(); renderUserList(); document.getElementById('adminModal').classList.add('open'); }
+function closeAdmin() { document.getElementById('adminModal').classList.remove('open'); }
 
-async function renderUserList(){
-  document.getElementById('userList').innerHTML='<p style="text-align:center;color:var(--txt3);font-size:12px">⏳ Загрузка...</p>';
+function expiryLabel(user) {
+  if (user.role === 'admin') return '';
+  var parts = [];
+  // Driver limit badge
+  var lim = user.driverLimit !== undefined ? parseInt(user.driverLimit) : BILLING.defaultDriverLimit;
+  if (lim === 0) parts.push('<span class="user-exp uexp-ok">∞ водит.</span>');
+  else parts.push('<span class="user-exp" style="background:var(--blue2);color:var(--blue)">👤 '+lim+' водит.</span>');
+  // Expiry badge
+  var expiry = user.expiry;
+  if (!expiry) parts.push('<span class="user-exp uexp-none">нет даты</span>');
+  else if (expiry === 'never') parts.push('<span class="user-exp uexp-ok">∞ бессрочно</span>');
+  else {
+    var today = new Date(); today.setHours(0,0,0,0);
+    var exp = new Date(expiry); exp.setHours(0,0,0,0);
+    var diff = Math.ceil((exp - today)/(1000*60*60*24));
+    if (diff < 0) parts.push('<span class="user-exp uexp-exp">истекла '+Math.abs(diff)+' дн. назад</span>');
+    else if (diff <= 7) parts.push('<span class="user-exp uexp-warn">⚠ '+diff+' дн.</span>');
+    else parts.push('<span class="user-exp uexp-ok">до '+expiry+'</span>');
+  }
+  return parts.join(' ');
+}
+
+async function renderAdminStats() {
   var snap = await db.ref('users').get();
-  var data = snap.val()||{};
-  var users = Object.keys(data).map(function(k){ return Object.assign({login:k},data[k]); });
-  var admins = users.filter(function(u){return u.role==='admin';});
+  var data = snap.val() || {};
+  var users = Object.keys(data).map(function(k){ return Object.assign({login:k}, data[k]); });
+  var drivers = users.filter(function(u){ return u.role !== 'admin'; });
+  var active = drivers.filter(function(u){ return checkExpiry(u).ok; });
+  var expired = drivers.filter(function(u){ return !checkExpiry(u).ok; });
+
+  // Pricing tier
+  var tier = BILLING.plans[0];
+  for (var i = 0; i < BILLING.plans.length; i++) {
+    if (drivers.length <= BILLING.plans[i].max) { tier = BILLING.plans[i]; break; }
+  }
+
+  document.getElementById('adminStats').innerHTML =
+    '<div class="stat-card"><div class="sc-num">'+drivers.length+'</div><div class="sc-label">Всего траков</div></div>'+
+    '<div class="stat-card"><div class="sc-num" style="color:var(--grn)">'+active.length+'</div><div class="sc-label">Активных</div></div>'+
+    '<div class="stat-card"><div class="sc-num" style="color:var(--red)">'+expired.length+'</div><div class="sc-label">Истекло</div></div>'+
+    '<div class="stat-card"><div class="sc-num" style="color:var(--acc);font-size:14px">'+tier.price+'</div><div class="sc-label">'+tier.label+'</div></div>';
+}
+
+async function renderUserList() {
+  document.getElementById('userList').innerHTML = '<p style="text-align:center;color:var(--txt3);font-size:12px">⏳ Загрузка...</p>';
+  var snap = await db.ref('users').get();
+  var data = snap.val() || {};
+  var users = Object.keys(data).map(function(k){ return Object.assign({login:k}, data[k]); });
+  var admins = users.filter(function(u){ return u.role==='admin'; });
   document.getElementById('userList').innerHTML = users.map(function(u){
-    var canDel = !(u.role==='admin'&&admins.length<=1);
+    var canDel = !(u.role==='admin' && admins.length<=1);
     return '<div class="user-row">'+
       '<span class="uname">'+u.login+'</span>'+
       '<span class="uname-real">'+(u.name||'')+'</span>'+
       '<span class="urole'+(u.role==='admin'?' admin':'')+'">'+u.role+'</span>'+
-      (canDel?'<button class="udelete" onclick="deleteUser(\''+u.login+'\')">✕</button>':'')+
+      expiryLabel(u)+
+      (u.role!=='admin' ? '<button class="uext-btn" onclick="promptExtend(\''+u.login+'\',\''+( u.expiry||'')+'\')">📅 Продлить</button>' : '')+
+      (canDel ? '<button class="udelete" onclick="deleteUser(\''+u.login+'\')">✕</button>' : '')+
     '</div>';
-  }).join('')||'<p style="text-align:center;color:var(--txt3);font-size:12px">Нет пользователей</p>';
+  }).join('') || '<p style="text-align:center;color:var(--txt3);font-size:12px">Нет пользователей</p>';
 }
 
-async function addUser(){
-  var login=document.getElementById('newLogin').value.trim();
-  var pass=document.getElementById('newPass').value;
-  var name=document.getElementById('newName').value.trim();
-  var role=document.getElementById('newRole').value;
-  if(!login||!pass)return alert('Введи логин и пароль');
+async function promptExtend(login, currentExpiry) {
+  // Use custom modal instead of ugly browser prompt
+  openExtendModal(login, currentExpiry);
+}
+
+function openExtendModal(login, currentExpiry) {
+  var existing = document.getElementById('extendModal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'extendModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:16px;width:100%;max-width:400px;box-shadow:0 24px 80px rgba(0,0,0,.4);overflow:hidden;">' +
+      '<div style="background:linear-gradient(135deg,#1a1714,#2d2620);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;">' +
+        '<div>' +
+          '<div style="font-family:var(--serif);font-size:16px;font-weight:800;color:var(--acc);">📅 Продление доступа</div>' +
+          '<div style="font-size:11px;color:rgba(255,255,255,.4);font-family:var(--mono);margin-top:3px;">Пользователь: <span style="color:var(--acc)">'+login+'</span></div>' +
+        '</div>' +
+        '<button onclick="document.getElementById(\'extendModal\').remove()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>' +
+      '</div>' +
+      '<div style="padding:24px;">' +
+        (currentExpiry ? '<div style="background:var(--bg);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--txt2);margin-bottom:16px;font-family:var(--mono);">Текущая дата: <strong style="color:var(--txt)">'+currentExpiry+'</strong></div>' : '') +
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:10px;">Быстро продлить</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">' +
+          '<button onclick="applyExtendPreset(\'7\')" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 4px;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt2);">+7 дн.</button>' +
+          '<button onclick="applyExtendPreset(\'30\')" style="background:var(--acc);border:none;border-radius:8px;padding:10px 4px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;">+30 дн.</button>' +
+          '<button onclick="applyExtendPreset(\'90\')" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 4px;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt2);">+90 дн.</button>' +
+          '<button onclick="applyExtendPreset(\'365\')" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 4px;font-size:12px;font-weight:600;cursor:pointer;color:var(--txt2);">+1 год</button>' +
+        '</div>' +
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt3);margin-bottom:8px;">Или введи дату вручную</div>' +
+        '<input type="date" id="extendDateInput" style="width:100%;border:2px solid var(--border);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:14px;font-weight:600;color:var(--txt);background:var(--bg);outline:none;margin-bottom:8px;" />' +
+        '<button onclick="applyExtendPreset(\'never\')" style="width:100%;background:var(--bg);border:2px dashed var(--border2);border-radius:8px;padding:10px;font-size:12px;font-weight:600;color:var(--txt3);cursor:pointer;margin-bottom:16px;">∞ Бессрочно</button>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button onclick="document.getElementById(\'extendModal\').remove()" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;color:var(--txt2);">Отмена</button>' +
+          '<button onclick="confirmExtend(\''+login+'\',\''+currentExpiry+'\')" style="flex:2;background:#1a1714;color:var(--acc);border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);">✓ Сохранить</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(modal);
+  // Set min date to today
+  var today = new Date().toISOString().slice(0,10);
+  document.getElementById('extendDateInput').min = today;
+}
+
+function applyExtendPreset(val) {
+  if (val === 'never') {
+    document.getElementById('extendDateInput').value = '';
+    document.getElementById('extendDateInput').dataset.never = '1';
+    document.getElementById('extendDateInput').placeholder = 'бессрочно';
+    document.getElementById('extendDateInput').style.borderColor = 'var(--grn)';
+    return;
+  }
+  delete document.getElementById('extendDateInput').dataset.never;
+  document.getElementById('extendDateInput').style.borderColor = 'var(--acc)';
+  var d = new Date();
+  d.setDate(d.getDate() + parseInt(val));
+  document.getElementById('extendDateInput').value = d.toISOString().slice(0,10);
+}
+
+async function confirmExtend(login, currentExpiry) {
+  var inp = document.getElementById('extendDateInput');
+  var newExpiry;
+  if (inp.dataset.never === '1') {
+    newExpiry = 'never';
+  } else if (inp.value) {
+    newExpiry = inp.value;
+  } else {
+    inp.style.borderColor = 'var(--red)';
+    inp.placeholder = 'Выбери дату!';
+    return;
+  }
   try {
-    var snap=await db.ref('users/'+login).get();
-    if(snap.exists())return alert('Логин уже занят');
-    await db.ref('users/'+login).set({pass:pass,name:name,role:role});
-    document.getElementById('newLogin').value=''; document.getElementById('newPass').value=''; document.getElementById('newName').value='';
+    await db.ref('users/'+login+'/expiry').set(newExpiry);
+    document.getElementById('extendModal').remove();
     renderUserList();
-    alert('✓ Пользователь '+login+' добавлен! Он может войти с любого устройства.');
+    renderAdminStats();
+    // Show success toast
+    showToast('✓ Дата обновлена: ' + newExpiry, 'ok');
+  } catch(e) {
+    showToast('✗ Ошибка: ' + e.message, 'err');
+  }
+}
+
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;font-family:var(--sans);z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:opacity .3s;';
+  t.style.background = type==='ok' ? 'var(--grn)' : 'var(--red)';
+  t.style.color = '#fff';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); }, 300); }, 2500);
+}
+
+function applyExpiryPreset() {
+  var val = document.getElementById('newExpiryPreset').value;
+  if (!val) return;
+  if (val === 'never') {
+    document.getElementById('newExpiry').value = '';
+    document.getElementById('newExpiry').placeholder = 'бессрочно';
+    document.getElementById('newExpiry').dataset.never = '1';
+    return;
+  }
+  delete document.getElementById('newExpiry').dataset.never;
+  var d = new Date();
+  d.setDate(d.getDate() + parseInt(val));
+  document.getElementById('newExpiry').value = d.toISOString().slice(0,10);
+}
+
+async function addUser() {
+  var login = document.getElementById('newLogin').value.trim();
+  var pass  = document.getElementById('newPass').value;
+  var name  = document.getElementById('newName').value.trim();
+  var role  = document.getElementById('newRole').value;
+  var driverLimit = parseInt(document.getElementById('newDriverLimit').value);
+  var expiryEl = document.getElementById('newExpiry');
+  var expiry = expiryEl.dataset.never === '1' ? 'never' : (expiryEl.value || null);
+  if (!login || !pass) return alert('Введи логин и пароль');
+  try {
+    var snap = await db.ref('users/'+login).get();
+    if (snap.exists()) return alert('Логин уже занят');
+    var userData = {pass:pass,name:name,role:role,driverLimit:driverLimit};
+    if (expiry) userData.expiry = expiry;
+    await db.ref('users/'+login).set(userData);
+    document.getElementById('newLogin').value=''; document.getElementById('newPass').value='';
+    document.getElementById('newName').value=''; document.getElementById('newExpiry').value='';
+    document.getElementById('newExpiryPreset').value=''; document.getElementById('newDriverLimit').value='5';
+    delete document.getElementById('newExpiry').dataset.never;
+    renderUserList(); renderAdminStats();
+    var limitTxt = driverLimit===0 ? 'без лимита' : driverLimit+' водителей';
+    alert('✓ Пользователь "'+login+'" добавлен!\nЛимит водителей: '+limitTxt+(expiry?' | Истечёт: '+expiry:''));
   } catch(e){ alert('Ошибка: '+e.message); }
 }
 
-async function deleteUser(login){
-  if(!confirm('Удалить пользователя '+login+'?'))return;
-  await db.ref('users/'+login).remove(); renderUserList();
+async function deleteUser(login) {
+  if (!confirm('Удалить пользователя "'+login+'"?')) return;
+  await db.ref('users/'+login).remove(); renderUserList(); renderAdminStats();
 }
 
 // ════════════════════════════════════════════
-// HISTORY — Firebase per user
+// HISTORY — Firebase
 // ════════════════════════════════════════════
 function histPath(){ return 'history/'+(currentUser?currentUser.login:'anon'); }
 
@@ -596,51 +998,38 @@ async function getHistory(){
     return arr;
   } catch(e){ return []; }
 }
+async function saveToHistory(record){ try{ await db.ref(histPath()+'/'+record.id).set(record); }catch(e){} }
+async function deleteFromHistory(id){ try{ await db.ref(histPath()+'/'+id).remove(); }catch(e){} }
 
-async function saveToHistory(record){
-  try { await db.ref(histPath()+'/'+record.id).set(record); } catch(e){ console.warn('Save failed',e); }
-}
-
-async function deleteFromHistory(id){
-  try { await db.ref(histPath()+'/'+id).remove(); } catch(e){}
+function _saveInvoiceRecord(record, v) {
+  getHistory().then(function(ex){
+    var dup = ex.length && ex[0].driver===v.driver && ex[0].week===v.week && Math.abs(ex[0].gross-v.gross)<0.01;
+    if (!dup) saveToHistory(record);
+  });
 }
 
 var histFilterDriver='all';
-
 async function renderHistory(){
   var c=document.getElementById('histContainer'),fc=document.getElementById('histFilter'),cnt=document.getElementById('histCount');
-  c.innerHTML='<div class="empty"><div class="ic">⏳</div>Загрузка из облака...</div>';
-  var h = await getHistory();
-  if(!h.length){
-    fc.innerHTML=''; cnt.textContent='';
-    c.innerHTML='<div class="hist-empty"><div class="ic">📭</div><p>Здесь будут твои расчёты.<br>Сделай первый инвойс — он сохранится автоматически.</p></div>';
-    return;
-  }
+  c.innerHTML='<div class="empty"><div class="ic">⏳</div>Загрузка...</div>';
+  var h=await getHistory();
+  if(!h.length){fc.innerHTML='';cnt.textContent='';c.innerHTML='<div class="hist-empty"><div class="ic">📭</div><p>Здесь будут твои расчёты.</p></div>';return;}
   var drivers=['all'];
   h.forEach(function(r){if(r.driver&&drivers.indexOf(r.driver)===-1)drivers.push(r.driver);});
-  fc.innerHTML=drivers.map(function(d){
-    return '<button class="hf-btn'+(histFilterDriver===d?' active':'')+'" onclick="setHistFilter(\''+d.replace(/'/g,"\\'")+'\')">'+
-      (d==='all'?'Все':d)+'</button>';
-  }).join('');
+  fc.innerHTML=drivers.map(function(d){return'<button class="hf-btn'+(histFilterDriver===d?' active':'')+'" onclick="setHistFilter(\''+d.replace(/'/g,"\\'")+'\')">'+( d==='all'?'Все':d)+'</button>';}).join('');
   var filtered=histFilterDriver==='all'?h:h.filter(function(r){return r.driver===histFilterDriver;});
   cnt.textContent=filtered.length+' расчётов';
   if(!filtered.length){c.innerHTML='<div class="hist-empty"><div class="ic">🔍</div><p>Нет расчётов.</p></div>';return;}
   c.innerHTML=filtered.map(function(r){
     var ini=(r.driver||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
-    return '<div class="hist-card">'+
+    return'<div class="hist-card">'+
       '<div class="hist-card-top" onclick="openHistRecord(\''+r.id+'\')">'+
         '<div class="hist-avatar">'+ini+'</div>'+
-        '<div class="hist-info"><div class="hist-driver">'+(r.driver||'—')+'</div>'+
-        '<div class="hist-week">'+r.week+' · Truck #'+r.truck+'</div></div>'+
-        '<div class="hist-amounts"><div class="hist-gross">'+fmt(r.gross)+'</div>'+
-        '<div class="hist-net">'+(r.driverPayOn?'Driver: '+fmt(r.driverAmt||0):'Owner Op.')+'</div></div>'+
+        '<div class="hist-info"><div class="hist-driver">'+(r.driver||'—')+'</div><div class="hist-week">'+r.week+' · Truck #'+r.truck+'</div></div>'+
+        '<div class="hist-amounts"><div class="hist-gross">'+fmt(r.gross)+'</div><div class="hist-net">'+(r.driverPayOn?'Driver: '+fmt(r.driverAmt||0):'Owner Op.')+'</div></div>'+
       '</div>'+
       '<div class="hist-card-bot">'+
-        '<div class="hist-tags">'+
-          '<span class="hist-tag">'+r.tripCount+' поезд.</span>'+
-          '<span class="hist-tag">'+(r.canceledCount?r.canceledCount+' отмен.':'✓ без отмен')+'</span>'+
-          (r.totalMiles?'<span class="hist-tag">'+r.totalMiles+' mi</span>':'')+
-        '</div>'+
+        '<div class="hist-tags"><span class="hist-tag">'+r.tripCount+' поезд.</span><span class="hist-tag">'+(r.canceledCount?r.canceledCount+' отмен.':'✓ без отмен')+'</span></div>'+
         '<div class="hist-actions">'+
           '<button class="hist-btn" onclick="openHistRecord(\''+r.id+'\');event.stopPropagation()">👁 Открыть</button>'+
           '<button class="hist-btn del" onclick="deleteHistAsync(\''+r.id+'\');event.stopPropagation()">✕ Удалить</button>'+
@@ -650,8 +1039,45 @@ async function renderHistory(){
   }).join('');
 }
 function setHistFilter(d){histFilterDriver=d;renderHistory();}
-async function deleteHistAsync(id){if(!confirm('Удалить?'))return;await deleteFromHistory(id);renderHistory();}
+function deleteHistAsync(id) {
+  showConfirmModal(
+    '🗑️',
+    'Удалить расчёт?',
+    'Это действие нельзя отменить. Инвойс будет удалён из истории.',
+    'Удалить',
+    async function() {
+      await deleteFromHistory(id);
+      renderHistory();
+    }
+  );
+}
 
+function showConfirmModal(icon, title, sub, confirmText, onConfirm) {
+  var existing = document.getElementById('confirmModal');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'confirmModal';
+  overlay.className = 'confirm-modal-overlay';
+  overlay.innerHTML =
+    '<div class="confirm-modal">' +
+      '<div class="confirm-modal-head">' +
+        '<div class="confirm-modal-icon">'+icon+'</div>' +
+        '<div class="confirm-modal-title">'+title+'</div>' +
+        '<div class="confirm-modal-sub">'+sub+'</div>' +
+      '</div>' +
+      '<div class="confirm-modal-actions">' +
+        '<button class="confirm-modal-cancel" onclick="document.getElementById(\'confirmModal\').remove()">Отмена</button>' +
+        '<button class="confirm-modal-confirm" id="confirmModalBtn">'+confirmText+'</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  // Close on overlay click
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) overlay.remove(); });
+  document.getElementById('confirmModalBtn').onclick = function() {
+    overlay.remove();
+    onConfirm();
+  };
+}
 async function openHistRecord(id){
   var h=await getHistory(); var r=h.find(function(x){return x.id===id;});if(!r)return;
   trips=r.trips;
@@ -660,21 +1086,33 @@ async function openHistRecord(id){
   document.getElementById('driverPay').value=r.driverPayPct||35; document.getElementById('dispatchPct').value=r.dp||10;
   document.getElementById('insurance').value=r.ins||500; document.getElementById('eld').value=r.eld||40;
   document.getElementById('ifta').value=r.ifta||120; document.getElementById('fuel').value=r.fuel||0; document.getElementById('other').value=r.other||0;
-  var dpOn=r.driverPayOn!==false;
-  document.getElementById('driverPayToggle').checked=dpOn; toggleDriverPay();
+  var dpOn=r.driverPayOn!==false; document.getElementById('driverPayToggle').checked=dpOn; toggleDriverPay();
   goPage(3);
 }
 
-// SESSION ON LOAD
+// ════════════════════════════════════════════
+// SESSION RESTORE
+// ════════════════════════════════════════════
 initDefaultAdmin();
 (function(){
   try {
-    var s=JSON.parse(localStorage.getItem(SESSION_KEY));
-    if(s&&s.login){
+    var s = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (s && s.login) {
       db.ref('users/'+s.login).get().then(function(snap){
-        if(snap.exists()&&snap.val().pass===s.pass){ startApp(Object.assign({login:s.login},snap.val())); }
-        else { localStorage.removeItem(SESSION_KEY); document.getElementById('loginScreen').style.display='flex'; }
-      }).catch(function(){ startApp(s); }); // offline — trust cache
+        if (snap.exists() && snap.val().pass === s.pass) {
+          var user = Object.assign({login:s.login}, snap.val());
+          var exp = checkExpiry(user);
+          if (!exp.ok) { showPaywall(user, exp); return; }
+          startApp(user);
+        } else {
+          localStorage.removeItem(SESSION_KEY);
+          document.getElementById('loginScreen').style.display='flex';
+        }
+      }).catch(function(){
+        var exp = checkExpiry(s);
+        if (!exp.ok) { showPaywall(s, exp); return; }
+        startApp(s);
+      });
       return;
     }
   } catch(e){}
@@ -682,83 +1120,82 @@ initDefaultAdmin();
 })();
 
 // ════════════════════════════════════════════
-// NAVIGATION & UI
+// APP LOGIC (unchanged)
 // ════════════════════════════════════════════
 function goPage(n){
   document.querySelectorAll('.page').forEach(function(p,i){p.classList.toggle('active',i===n);});
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===n);});
+  if(n===1) showDriverLimitBanner();
   if(n===2)renderTrips(); if(n===3)renderInvoice(); if(n===4)renderHistory();
   window.scrollTo(0,0);
 }
-function fmt(n){return'$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 
+async function showDriverLimitBanner() {
+  var banner = document.getElementById('driverLimitBanner');
+  if (!banner || !currentUser || currentUser.role === 'admin') { if(banner) banner.style.display='none'; return; }
+  var userLimit = currentUser.driverLimit !== undefined ? parseInt(currentUser.driverLimit) : BILLING.defaultDriverLimit;
+  if (userLimit === 0) { banner.style.display='none'; return; }
+  var hist = await getHistory();
+  var knownDrivers = [];
+  hist.forEach(function(r){ if(r.driver&&r.driver!=='—'&&knownDrivers.indexOf(r.driver)===-1) knownDrivers.push(r.driver); });
+  var used = knownDrivers.length;
+  var remaining = userLimit - used;
+  if (remaining <= 0) {
+    banner.style.display='';
+    banner.innerHTML = '🚫 <strong>Лимит водителей исчерпан</strong> ('+used+'/'+userLimit+'). Активные: '+knownDrivers.join(', ')+'. <a href="https://wa.me/'+BILLING.waNumber+'?text='+encodeURIComponent('Привет! Логин: '+currentUser.login+'. Хочу увеличить лимит водителей.')+'" target="_blank" style="color:var(--blue);font-weight:700">Написать в Telegram →</a>';
+  } else if (remaining <= 2) {
+    banner.style.display='';
+    banner.innerHTML = '⚠️ Осталось слотов для водителей: <strong>'+remaining+' из '+userLimit+'</strong>. Использованы: '+knownDrivers.join(', ');
+  } else {
+    banner.style.display='';
+    banner.innerHTML = '👤 Водителей использовано: <strong>'+used+' из '+userLimit+'</strong>';
+  }
+}
+function fmt(n){return'$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
 function toggleDriverPay(){
-  var on=document.getElementById('driverPayToggle').checked;
-  document.getElementById('driverPayRow').classList.toggle('disabled-row',!on);
-  document.getElementById('driverPayTag').textContent=on?'Company Driver':'Owner Operator';
-  document.getElementById('driverPayTag').className='dpl-tag '+(on?'tag-company':'tag-owner');
+  var on = document.getElementById('driverPayToggle').checked;
+  var row = document.getElementById('driverPayRow');
+  var inp = document.getElementById('driverPay');
+  // Visual feedback only — input stays enabled so user can still change %
+  row.style.opacity = on ? '1' : '0.5';
+  row.style.background = on ? 'rgba(45,122,95,.04)' : 'var(--bg3)';
+  document.getElementById('driverPayTag').textContent = on ? 'Company Driver' : 'Owner Operator';
+  document.getElementById('driverPayTag').className = 'dpl-tag '+(on ? 'tag-company' : 'tag-owner');
+  inp.disabled = !on;
 }
 
-// ════════════════════════════════════════════
-// DOLLAR PARSER — all formats
-// ════════════════════════════════════════════
 function parseDollar(s){
-  s=(s||'').toString().replace(/\$/g,'').trim();
-  if(!s)return 0;
-  var commas=(s.match(/,/g)||[]).length;
-  var dots=(s.match(/\./g)||[]).length;
-  var spaces=(s.match(/\s/g)||[]).length;
-  if(spaces>0){
-    s=s.replace(/\s/g,'');
-    if(/,\d{1,2}$/.test(s))return parseFloat(s.replace(',','.'))||0;
-    return parseFloat(s.replace(/,/g,''))||0;
-  }
+  s=(s||'').toString().replace(/\$/g,'').trim();if(!s)return 0;
+  var commas=(s.match(/,/g)||[]).length,dots=(s.match(/\./g)||[]).length,spaces=(s.match(/\s/g)||[]).length;
+  if(spaces>0){s=s.replace(/\s/g,'');if(/,\d{1,2}$/.test(s))return parseFloat(s.replace(',','.'))||0;return parseFloat(s.replace(/,/g,''))||0;}
   if(dots>0&&commas===1&&s.indexOf(',')>s.lastIndexOf('.')){return parseFloat(s.replace(/\./g,'').replace(',','.'))||0;}
-  if(commas>0&&dots===1&&s.indexOf('.')>s.lastIndexOf(',')){ return parseFloat(s.replace(/,/g,''))||0;}
-  if(commas===1&&dots===0){
-    var parts=s.split(',');
-    if(parts[1]&&parts[1].length<=2)return parseFloat(s.replace(',','.'))||0;
-    return parseFloat(s.replace(/,/g,''))||0;
-  }
+  if(commas>0&&dots===1&&s.indexOf('.')>s.lastIndexOf(',')){return parseFloat(s.replace(/,/g,''))||0;}
+  if(commas===1&&dots===0){var pts=s.split(',');if(pts[1]&&pts[1].length<=2)return parseFloat(s.replace(',','.'))||0;return parseFloat(s.replace(/,/g,''))||0;}
   if(commas>1&&dots===0)return parseFloat(s.replace(/,/g,''))||0;
   return parseFloat(s)||0;
 }
 
-// ════════════════════════════════════════════
-// TEXT PARSER
-// ════════════════════════════════════════════
 function extractRate(flat,lines){
-  var labelRe=/(?:rate|gross|amount|total|pay(?:out)?|earnings?|revenue)[\s:=]*\$([\d\s.,]+)/gi;
-  var m,best=0;
+  var labelRe=/(?:rate|gross|amount|total|pay(?:out)?|earnings?|revenue)[\s:=]*\$([\d\s.,]+)/gi,m,best=0;
   while((m=labelRe.exec(flat))!==null){var v=parseDollar(m[1]);if(v>best)best=v;}
   if(best>50)return{rate:best,method:'labelled'};
-  var perMile={};
-  var pmRe=/\$([\d.,\s]+)\s*\/\s*(?:mi|mile)/gi;
+  var perMile={};var pmRe=/\$([\d.,\s]+)\s*\/\s*(?:mi|mile)/gi;
   while((m=pmRe.exec(flat))!==null)perMile[parseDollar(m[1])]=true;
-  var amounts=[];
-  var dolRe=/\$([\d][\d\s.,]*\d|\d+)/g;
+  var amounts=[];var dolRe=/\$([\d][\d\s.,]*\d|\d+)/g;
   while((m=dolRe.exec(flat))!==null){var v=parseDollar(m[1]);if(v>10&&!perMile[v])amounts.push(v);}
-  lines.forEach(function(ln){
-    var bare=/^([\d,.]+)$/.exec(ln.trim());
-    if(bare){var v=parseDollar(bare[1]);if(v>10&&!perMile[v])amounts.push(v);}
-  });
+  lines.forEach(function(ln){var bare=/^([\d,.]+)$/.exec(ln.trim());if(bare){var v=parseDollar(bare[1]);if(v>10&&!perMile[v])amounts.push(v);}});
   if(!amounts.length)return{rate:0,method:'none'};
   return{rate:Math.max.apply(null,amounts),method:'max_dollar'};
 }
 
 function parseTextAndGo(){
-  var raw=document.getElementById('rawInput').value;
-  var st=document.getElementById('stText');
-  if(!raw.trim()){st.className='status err';st.textContent='✗ Пусто — вставь текст из Relay';return;}
+  var raw=document.getElementById('rawInput').value,st=document.getElementById('stText');
+  if(!raw.trim()){st.className='status err';st.textContent='✗ Пусто';return;}
   trips=[];debugData=[];
   var tripIdRe=/^(T-[A-Z0-9]{4,12}|[A-Z0-9]{6,12})$/;
   var lines=raw.split('\n').map(function(l){return l.trim();}).filter(Boolean);
   var blocks=[],cur=null;
-  for(var i=0;i<lines.length;i++){
-    var l=lines[i];
-    if(tripIdRe.test(l)){if(cur)blocks.push(cur);cur={id:l,lines:[]};}
-    else if(cur)cur.lines.push(l);
-  }
+  for(var i=0;i<lines.length;i++){var l=lines[i];if(tripIdRe.test(l)){if(cur)blocks.push(cur);cur={id:l,lines:[]};}else if(cur)cur.lines.push(l);}
   if(cur)blocks.push(cur);
   if(!blocks.length){st.className='status err';st.textContent='✗ Поездок не найдено';return;}
   for(var b=0;b<blocks.length;b++){
@@ -766,7 +1203,25 @@ function parseTextAndGo(){
     var hasCanceled=/canceled|cancell?ed/i.test(flat);
     var ex=extractRate(flat,block.lines);
     var trulyCanceled=hasCanceled&&ex.rate===0;
-    var miM=flat.match(/(\d+)\s*mi\b/i),miles=miM?parseInt(miM[1]):0;
+    // ── MILES PARSING — robust ──
+    // Amazon Relay format: miles appears on its own line like "365 mi"
+    // after trip details, NOT as part of "9h 56m" time
+    var miles = 0;
+    for (var li = 0; li < block.lines.length; li++) {
+      var ln = block.lines[li].trim();
+      // Exact match: "365 mi" or "1234 miles" — standalone line
+      var exactMi = /^(\d{2,4})\s*mi(?:les?)?\s*$/i.exec(ln);
+      if (exactMi) { miles = parseInt(exactMi[1]); break; }
+    }
+    // Fallback: strip time patterns then search
+    if (!miles) {
+      var flatNoTime = flat
+        .replace(/\d+h\s*\d+m/gi, '')   // remove "9h 56m"
+        .replace(/\d+:\d+/g, '')          // remove "13:25"
+        .replace(/\b\d{5}\b/g, '');       // remove zip codes like "14086"
+      var miFallback = flatNoTime.match(/\b(\d{2,4})\s*mi(?:les?)?\b/i);
+      if (miFallback) miles = parseInt(miFallback[1]);
+    }
     var stopLines=block.lines.filter(function(ln){return /^\d+\s+[A-Z]/.test(ln)||/^[A-Z]{2,5}\d*\s+[A-Z]/.test(ln);});
     var from='—',to='—';
     if(stopLines.length>=2){from=stopLines[0].replace(/^\d+\s+/,'').slice(0,50);to=stopLines[stopLines.length-1].replace(/^\d+\s+/,'').slice(0,50);}
@@ -775,49 +1230,38 @@ function parseTextAndGo(){
     trips.push({id:block.id,from:from,to:to,miles:miles,rate:ex.rate,pct:100,canceled:trulyCanceled,statusLabel:sl});
     debugData.push({id:block.id,rate:ex.rate,method:ex.method,sl:sl,preview:flat.slice(0,200)});
   }
-  var paid=trips.filter(function(t){return !t.canceled;}).length;
-  var canc=trips.filter(function(t){return t.canceled;}).length;
+  var paid=trips.filter(function(t){return !t.canceled;}).length,canc=trips.filter(function(t){return t.canceled;}).length;
   var gross=trips.filter(function(t){return !t.canceled;}).reduce(function(s,t){return s+t.rate;},0);
   var zeros=trips.filter(function(t){return !t.canceled&&t.rate===0;}).length;
-  if(zeros>0){st.className='status warn';st.textContent='⚠ '+trips.length+' | '+zeros+' без суммы — проверь детали!';}
+  if(zeros>0){st.className='status warn';st.textContent='⚠ '+trips.length+' | '+zeros+' без суммы!';}
   else{st.className='status ok';st.textContent='✓ '+trips.length+' | Оплач: '+paid+' | Отмен: '+canc+' | Гросс: '+fmt(gross);}
   renderDebug();goPage(1);
 }
-
 function renderDebug(){
-  var p=document.getElementById('debugPanel');
-  if(!debugData.length){p.innerHTML='';return;}
+  var p=document.getElementById('debugPanel');if(!debugData.length){p.innerHTML='';return;}
   p.innerHTML='<h4>🔍 Детали парсинга</h4>'+debugData.map(function(d){
     var cls=d.rate>0?'dt-ok':'dt-warn';
-    return '<div class="debug-trip"><span class="dt-id">'+d.id+'</span>  <span class="'+cls+'">'+fmt(d.rate)+'</span>  '+
-      '<span style="color:rgba(255,255,255,.4)">['+d.method+'] '+d.sl+'</span><br>'+
-      '<span style="color:rgba(255,255,255,.3);font-size:9px">'+d.preview.replace(/</g,'&lt;').slice(0,180)+'</span></div>';
+    return'<div class="debug-trip"><span class="dt-id">'+d.id+'</span>  <span class="'+cls+'">'+fmt(d.rate)+'</span>  <span style="color:rgba(255,255,255,.4)">['+d.method+'] '+d.sl+'</span><br>'+
+    '<span style="color:rgba(255,255,255,.3);font-size:9px">'+d.preview.replace(/</g,'&lt;').slice(0,180)+'</span></div>';
   }).join('');
 }
 function toggleDebug(){document.getElementById('debugPanel').classList.toggle('show');}
 
-// ════════════════════════════════════════════
-// TRIPS PAGE
-// ════════════════════════════════════════════
 function renderTrips(){
   var c=document.getElementById('tripsContainer'),gs=document.getElementById('grossSummary');
   if(!trips.length){gs.innerHTML='';c.innerHTML='<div class="empty"><div class="ic">📋</div>Загрузи данные на шаге ①</div>';return;}
   var gross=trips.filter(function(t){return !t.canceled;}).reduce(function(s,t){return s+t.rate*t.pct/100;},0);
   var totalMiles=trips.reduce(function(s,t){return s+(t.miles||0);},0);
-  var paid=trips.filter(function(t){return !t.canceled;}).length;
-  var canc=trips.filter(function(t){return t.canceled;}).length;
-  gs.innerHTML='<div class="gross-bar">'+
-    '<div><div class="gb-label">💰 Гросс</div><div class="gb-sub">'+paid+' оплач · '+canc+' отмен'+(totalMiles?' · '+totalMiles+' mi':'')+' </div></div>'+
-    '<div class="gb-val">'+fmt(gross)+'</div></div>';
+  var paid=trips.filter(function(t){return !t.canceled;}).length,canc=trips.filter(function(t){return t.canceled;}).length;
+  gs.innerHTML='<div class="gross-bar"><div><div class="gb-label">💰 Гросс</div><div class="gb-sub">'+paid+' оплач · '+canc+' отмен'+(totalMiles?' · '+totalMiles+' mi':'')+' </div></div><div class="gb-val">'+fmt(gross)+'</div></div>';
   c.innerHTML=trips.map(function(t,i){
     var bc=t.statusLabel==='paid'?'b-paid':t.statusLabel==='partial'?'b-partial':'b-canceled';
     var bt=t.statusLabel==='paid'?'PAID':t.statusLabel==='partial'?'CANCELED+PAID':'CANCELED';
     var amt=t.canceled?'$0.00':fmt(t.rate*t.pct/100);
-    return '<div class="trip-item '+(t.canceled?'canceled':'')+'">'+
+    return'<div class="trip-item '+(t.canceled?'canceled':'')+'">'+
       '<div class="trip-header"><span class="trip-id">'+t.id+'</span><span class="badge '+bc+'">'+bt+'</span></div>'+
       '<div class="trip-route"><strong>'+t.from+'</strong><span style="color:var(--acc);padding:0 6px">→</span><strong>'+t.to+'</strong></div>'+
-      '<div class="trip-footer"><div><div class="trip-amount">'+amt+'</div>'+
-      '<div class="trip-meta">'+(t.miles?t.miles+' mi':'')+(!t.canceled&&t.rate?' · $'+t.rate.toFixed(2):'')+'</div></div>'+
+      '<div class="trip-footer"><div><div class="trip-amount">'+amt+'</div><div class="trip-meta">'+(t.miles?t.miles+' mi':'')+(!t.canceled&&t.rate?' · $'+t.rate.toFixed(2):'')+'</div></div>'+
       '<button class="btn-del" onclick="removeTrip('+i+')">✕</button></div></div>';
   }).join('');
 }
@@ -829,115 +1273,91 @@ function getValues(){
     gross:trips.filter(function(t){return !t.canceled;}).reduce(function(s,t){return s+(t.rate*t.pct/100);},0),
     totalMiles:trips.reduce(function(s,t){return s+(t.miles||0);},0),
     paidMiles:trips.filter(function(t){return !t.canceled;}).reduce(function(s,t){return s+(t.miles||0);},0),
-    driverPayOn:dpOn,
-    driverPayPct:dpOn?(parseFloat(document.getElementById('driverPay').value)||0):0,
+    driverPayOn:dpOn,driverPayPct:dpOn?(parseFloat(document.getElementById('driverPay').value)||0):0,
     dp:parseFloat(document.getElementById('dispatchPct').value)||0,
-    ins:parseFloat(document.getElementById('insurance').value)||0,
-    eld:parseFloat(document.getElementById('eld').value)||0,
-    ifta:parseFloat(document.getElementById('ifta').value)||0,
-    fuel:parseFloat(document.getElementById('fuel').value)||0,
+    ins:parseFloat(document.getElementById('insurance').value)||0,eld:parseFloat(document.getElementById('eld').value)||0,
+    ifta:parseFloat(document.getElementById('ifta').value)||0,fuel:parseFloat(document.getElementById('fuel').value)||0,
     other:parseFloat(document.getElementById('other').value)||0,
-    driver:document.getElementById('driverName').value||'—',
-    truck:document.getElementById('truckNum').value||'—',
+    driver:document.getElementById('driverName').value||'—',truck:document.getElementById('truckNum').value||'—',
     week:document.getElementById('weekPeriod').value||new Date().toLocaleDateString('en-US'),
     company:document.getElementById('companyName').value||'YURT Trucking LLC'
   };
 }
 
-// ════════════════════════════════════════════
-// INVOICE
-// ════════════════════════════════════════════
 function renderInvoice(){
   var c=document.getElementById('invoiceContainer');
   if(!trips.length){c.innerHTML='<div class="empty"><div class="ic">🧾</div>Нет данных</div>';return;}
   var v=getValues();
-  var driverAmt=v.gross*v.driverPayPct/100;
-  var da=v.gross*v.dp/100;
-  var totalDed=da+v.ins+v.eld+v.ifta+v.fuel+v.other;
-  var companyNet=v.gross-driverAmt-totalDed;
-  var paidTrips=trips.filter(function(t){return !t.canceled;});
-  var canceledTrips=trips.filter(function(t){return t.canceled;});
-
-  // Auto-save to Firebase
+  var driverAmt=v.gross*v.driverPayPct/100,da=v.gross*v.dp/100,totalDed=da+v.ins+v.eld+v.ifta+v.fuel+v.other,companyNet=v.gross-driverAmt-totalDed;
+  var paidTrips=trips.filter(function(t){return !t.canceled;}),canceledTrips=trips.filter(function(t){return t.canceled;});
   var record={id:'inv_'+Date.now(),savedAt:new Date().toISOString(),driver:v.driver,truck:v.truck,week:v.week,company:v.company,gross:v.gross,driverAmt:driverAmt,driverPayOn:v.driverPayOn,companyNet:companyNet,tripCount:paidTrips.length,canceledCount:canceledTrips.length,totalMiles:v.totalMiles,trips:trips,driverPayPct:v.driverPayPct,dp:v.dp,ins:v.ins,eld:v.eld,ifta:v.ifta,fuel:v.fuel,other:v.other};
-  getHistory().then(function(existing){
-    var dup=existing.length&&existing[0].driver===v.driver&&existing[0].week===v.week&&Math.abs(existing[0].gross-v.gross)<0.01;
-    if(!dup) saveToHistory(record);
-  });
-
-  var tripRows=paidTrips.map(function(t,i){
-    var bs=t.statusLabel==='partial'?'<span class="inv-status inv-s-partial">CANCELED+PAID</span>':'<span class="inv-status inv-s-paid">PAID</span>';
-    return'<tr><td class="trip-num">'+(i+1)+'</td>'+
-      '<td style="font-family:var(--mono);font-size:11px;color:var(--acc)">'+t.id+'</td>'+
-      '<td>'+t.from+'</td><td>'+t.to+'</td>'+
-      '<td>'+bs+'</td><td class="right">'+fmt(t.rate*t.pct/100)+'</td></tr>';
-  }).join('');
-  var canceledRows=canceledTrips.map(function(t,i){
-    return'<tr class="canc-row"><td class="trip-num">C'+(i+1)+'</td>'+
-      '<td style="font-family:var(--mono);font-size:11px">'+t.id+'</td>'+
-      '<td>'+t.from+'</td><td>'+t.to+'</td>'+
-      '<td><span class="inv-status inv-s-canceled">CANCELED</span></td>'+
-      '<td class="right" style="color:var(--txt3)">$0.00</td></tr>';
-  }).join('');
-
+  // ── DRIVER LIMIT CHECK — only blocks SAVE, never blocks display ──
+  if (currentUser && currentUser.role !== 'admin') {
+    var userLimit = currentUser.driverLimit !== undefined ? parseInt(currentUser.driverLimit) : BILLING.defaultDriverLimit;
+    if (userLimit > 0) {
+      getHistory().then(function(hist) {
+        var knownDrivers = [];
+        hist.forEach(function(r) {
+          if (r.driver && r.driver !== '—' && knownDrivers.indexOf(r.driver) === -1) {
+            knownDrivers.push(r.driver);
+          }
+        });
+        var currentDriver = v.driver;
+        var isNewDriver = currentDriver && currentDriver !== '—' && knownDrivers.indexOf(currentDriver) === -1;
+        if (isNewDriver && knownDrivers.length >= userLimit) {
+          // Show limit paywall modal — beautiful, not alert()
+          var waMsg = 'Привет! Мой логин: ' + currentUser.login + '. Хочу увеличить лимит водителей (сейчас ' + userLimit + '). YURT Gross Calculator.';
+          showConfirmModal(
+            '🚫',
+            'Лимит водителей: ' + userLimit,
+            'В твоём тарифе максимум ' + userLimit + (userLimit===1?' водитель':' водителей') + '.\nАктивные: ' + knownDrivers.join(', '),
+            '💬 Написать в Telegram',
+            function() { window.open('https://wa.me/' + BILLING.waNumber + '?text=' + encodeURIComponent(waMsg), '_blank'); }
+          );
+          // Don't save but still show invoice
+        } else {
+          _saveInvoiceRecord(record, v);
+        }
+      });
+    } else {
+      _saveInvoiceRecord(record, v);
+    }
+  } else {
+    _saveInvoiceRecord(record, v);
+  }
+  var tripRows=paidTrips.map(function(t,i){var bs=t.statusLabel==='partial'?'<span class="inv-status inv-s-partial">CANCELED+PAID</span>':'<span class="inv-status inv-s-paid">PAID</span>';return'<tr><td class="trip-num">'+(i+1)+'</td><td style="font-family:var(--mono);font-size:11px;color:var(--acc)">'+t.id+'</td><td>'+t.from+'</td><td>'+t.to+'</td><td>'+bs+'</td><td class="right">'+fmt(t.rate*t.pct/100)+'</td></tr>';}).join('');
+  var canceledRows=canceledTrips.map(function(t,i){return'<tr class="canc-row"><td class="trip-num">C'+(i+1)+'</td><td style="font-family:var(--mono);font-size:11px">'+t.id+'</td><td>'+t.from+'</td><td>'+t.to+'</td><td><span class="inv-status inv-s-canceled">CANCELED</span></td><td class="right" style="color:var(--txt3)">$0.00</td></tr>';}).join('');
   var fuelRow=v.fuel>0?'<tr><td>Fuel Advance</td><td class="ded-neg">'+fmt(-v.fuel)+'</td></tr>':'';
   var otherRow=v.other>0?'<tr><td>Other Deductions</td><td class="ded-neg">'+fmt(-v.other)+'</td></tr>':'';
   var stmtNum='STMT-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*9000)+1000);
-
   var milesBanner='';
   if(v.totalMiles>0){
-    var avgRpM=v.paidMiles>0?'$'+(v.gross/v.paidMiles).toFixed(2)+'/mi':'—';
+    // RPM = Gross / Paid Miles (only miles from paid trips)
+    var avgRpM = v.paidMiles>0 ? '$'+(v.gross/v.paidMiles).toFixed(2)+'/mi' : '—';
     milesBanner='<div class="inv-miles-banner">'+
-      '<div class="imb-item"><span class="imb-label">Total Miles</span><span class="imb-val">'+v.totalMiles.toLocaleString()+'</span></div>'+
       '<div class="imb-item"><span class="imb-label">Paid Miles</span><span class="imb-val">'+v.paidMiles.toLocaleString()+'</span></div>'+
-      '<div class="imb-item"><span class="imb-label">Avg $/mi</span><span class="imb-val">'+avgRpM+'</span></div>'+
+      '<div class="imb-item"><span class="imb-label">Revenue/Mile</span><span class="imb-val">'+avgRpM+'</span></div>'+
     '</div>';
   }
-
-  var driverPayRow='';
-  if(v.driverPayOn){
-    driverPayRow='<tr class="row-spacer"><td colspan="2"></td></tr>'+
-      '<tr class="row-driver-pay"><td>💰 Driver Pay ('+v.driverPayPct+'% of '+fmt(v.gross)+')</td><td>'+fmt(driverAmt)+'</td></tr>';
-  }
-  var ownerOpNote=!v.driverPayOn?'<tr class="row-spacer"><td colspan="2"></td></tr><tr><td style="color:var(--blue);font-size:12px">ℹ️ Owner Operator — Driver Pay не применяется</td><td></td></tr>':'';
-
+  var driverPayRow=v.driverPayOn?'<tr class="row-spacer"><td colspan="2"></td></tr><tr class="row-driver-pay"><td>💰 Driver Pay ('+v.driverPayPct+'% of '+fmt(v.gross)+')</td><td>'+fmt(driverAmt)+'</td></tr>':'<tr class="row-spacer"><td colspan="2"></td></tr><tr><td style="color:var(--blue);font-size:12px">ℹ️ Owner Operator</td><td></td></tr>';
   c.innerHTML=
   '<div class="invoice-wrap" id="invoicePrintArea">'+
-    '<div class="inv-header">'+
-      '<div class="inv-logo-block"><span class="inv-logo">'+v.company.split(' ')[0].toUpperCase()+'</span><span class="inv-tagline">'+v.company+'</span></div>'+
-      '<div class="inv-meta"><div class="inv-num">Statement #'+stmtNum+'</div><div class="inv-date">'+v.week+'</div></div>'+
-    '</div>'+
-    '<div class="inv-info">'+
-      '<div class="inv-info-block"><div class="lbl">Driver</div><div class="val">'+v.driver+'</div></div>'+
-      '<div class="inv-info-block"><div class="lbl">Truck</div><div class="val"><span>#'+v.truck+'</span></div></div>'+
-      '<div class="inv-info-block"><div class="lbl">Gross / Trips</div><div class="val"><span>'+fmt(v.gross)+'</span> <span style="font-size:11px;color:var(--txt3)">/ '+paidTrips.length+(canceledTrips.length?' +'+canceledTrips.length+'c':'')+'</span></div></div>'+
-    '</div>'+
+    '<div class="inv-header"><div class="inv-logo-block"><span class="inv-logo">'+v.company.split(' ')[0].toUpperCase()+'</span><span class="inv-tagline">'+v.company+'</span></div><div class="inv-meta"><div class="inv-num">Statement #'+stmtNum+'</div><div class="inv-date">'+v.week+'</div></div></div>'+
+    '<div class="inv-info"><div class="inv-info-block"><div class="lbl">Driver</div><div class="val">'+v.driver+'</div></div><div class="inv-info-block"><div class="lbl">Truck</div><div class="val"><span>#'+v.truck+'</span></div></div><div class="inv-info-block"><div class="lbl">Gross / Trips</div><div class="val"><span>'+fmt(v.gross)+'</span> <span style="font-size:11px;color:var(--txt3)">/ '+paidTrips.length+(canceledTrips.length?' +'+canceledTrips.length+'c':'')+'</span></div></div></div>'+
     milesBanner+
-    '<div class="inv-table-wrap">'+
-      '<table class="inv-table">'+
-        '<thead><tr><th>#</th><th>Trip ID</th><th>From</th><th>To</th><th>Status</th><th class="right">Amount</th></tr></thead>'+
-        '<tbody>'+tripRows+canceledRows+'</tbody>'+
-        '<tfoot><tr><td colspan="4"></td><td style="font-weight:700">Sub Total</td><td class="right" style="font-size:15px;color:var(--acc)">'+fmt(v.gross)+'</td></tr></tfoot>'+
-      '</table>'+
-    '</div>'+
-    '<div class="inv-deductions">'+
-      '<div class="inv-ded-title">Deductions & Breakdown</div>'+
-      '<table class="inv-ded-table">'+
-        '<tr><td>Dispatch Charge ('+v.dp+'%)</td><td class="ded-neg">'+fmt(-da)+'</td></tr>'+
-        '<tr><td>Insurance</td><td class="ded-neg">'+fmt(-v.ins)+'</td></tr>'+
-        '<tr><td>ELD</td><td class="ded-neg">'+fmt(-v.eld)+'</td></tr>'+
-        '<tr><td>Administration Fee (IFTA, Safety)</td><td class="ded-neg">'+fmt(-v.ifta)+'</td></tr>'+
-        fuelRow+otherRow+
-        '<tr class="row-total-ded"><td>Total Deductions</td><td>'+fmt(-totalDed)+'</td></tr>'+
-        driverPayRow+ownerOpNote+
-        '<tr class="row-spacer"><td colspan="2"></td></tr>'+
-        '<tr class="row-company-net"><td style="font-weight:700;color:var(--txt)">🏢 Company Net</td><td style="font-weight:700;font-family:var(--mono);font-size:14px;text-align:right;color:var(--txt)">'+fmt(Math.max(0,companyNet))+'</td></tr>'+
-      '</table>'+
-    '</div>'+
-    '<div class="inv-footer">'+
-      '<span class="ft-txt">'+v.company.toUpperCase()+' · '+new Date().toLocaleDateString('en-US')+'</span>'+
-      '<span class="ft-acc">'+(v.driverPayOn?'Driver: '+fmt(driverAmt)+' · ':'')+' Net: '+fmt(Math.max(0,companyNet))+'</span>'+
-    '</div>'+
+    '<div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>#</th><th>Trip ID</th><th>From</th><th>To</th><th>Status</th><th class="right">Amount</th></tr></thead><tbody>'+tripRows+canceledRows+'</tbody><tfoot><tr><td colspan="4"></td><td style="font-weight:700">Sub Total</td><td class="right" style="font-size:15px;color:var(--acc)">'+fmt(v.gross)+'</td></tr></tfoot></table></div>'+
+    '<div class="inv-deductions"><div class="inv-ded-title">Deductions & Breakdown</div><table class="inv-ded-table">'+
+      '<tr><td>Dispatch Charge ('+v.dp+'%)</td><td class="ded-neg">'+fmt(-da)+'</td></tr>'+
+      '<tr><td>Insurance</td><td class="ded-neg">'+fmt(-v.ins)+'</td></tr>'+
+      '<tr><td>ELD</td><td class="ded-neg">'+fmt(-v.eld)+'</td></tr>'+
+      '<tr><td>Administration Fee (IFTA, Safety)</td><td class="ded-neg">'+fmt(-v.ifta)+'</td></tr>'+
+      fuelRow+otherRow+
+      '<tr class="row-total-ded"><td>Total Deductions</td><td>'+fmt(-totalDed)+'</td></tr>'+
+      driverPayRow+
+      '<tr class="row-spacer"><td colspan="2"></td></tr>'+
+      '<tr class="row-company-net"><td style="font-weight:700;color:var(--txt)">🏢 Company Net</td><td style="font-weight:700;font-family:var(--mono);font-size:14px;text-align:right;color:var(--txt)">'+fmt(Math.max(0,companyNet))+'</td></tr>'+
+    '</table></div>'+
+    '<div class="inv-footer"><span class="ft-txt">'+v.company.toUpperCase()+' · '+new Date().toLocaleDateString('en-US')+'</span><span class="ft-acc">'+(v.driverPayOn?'Driver: '+fmt(driverAmt)+' · ':'')+' Net: '+fmt(Math.max(0,companyNet))+'</span></div>'+
   '</div>'+
   '<button class="btn-pdf-dl" onclick="downloadPDF()">📄 Скачать PDF</button>'+
   '<div class="new-week-wrap"><div class="new-week-line"></div><div class="new-week-label">Следующий расчёт?</div><div class="new-week-line"></div></div>'+
@@ -955,49 +1375,85 @@ function resetAll(){
 }
 
 function downloadPDF(){
-  var area=document.getElementById('invoicePrintArea');
-  if(!area){alert('Сначала сформируй инвойс');return;}
-  var v=getValues();
-  var btn=document.querySelector('.btn-pdf-dl');
-  var origText=btn?btn.textContent:'';
-  if(btn){btn.textContent='⏳ Создаю PDF...';btn.disabled=true;}
-  html2canvas(area,{
-    scale:2,
-    useCORS:true,
-    allowTaint:true,
-    backgroundColor:'#ffffff',
-    logging:false
-  }).then(function(canvas){
-    var imgData=canvas.toDataURL('image/png');
-    var pdf=new window.jspdf.jsPDF({
-      orientation:'portrait',
-      unit:'mm',
-      format:'a4'
-    });
-    var pageW=pdf.internal.pageSize.getWidth();
-    var pageH=pdf.internal.pageSize.getHeight();
-    var imgW=pageW;
-    var imgH=(canvas.height*pageW)/canvas.width;
-    // If taller than page — scale down to fit
-    if(imgH>pageH){imgW=(canvas.width*pageH)/canvas.height;imgH=pageH;}
-    var x=(pageW-imgW)/2;
-    pdf.addImage(imgData,'PNG',x,0,imgW,imgH);
-    var fname='YURT_Invoice_'+v.driver.replace(/\s+/g,'_')+'_Truck'+v.truck+'_'+new Date().toISOString().slice(0,10)+'.pdf';
-    // iPhone Safari fix: open in new tab instead of direct download
-    var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
-    if(isIOS){
-      var blob=pdf.output('blob');
-      var url=URL.createObjectURL(blob);
-      window.open(url,'_blank');
-      setTimeout(function(){URL.revokeObjectURL(url);},10000);
+  var area = document.getElementById('invoicePrintArea');
+  if(!area){showToast('Сначала сформируй инвойс','err');return;}
+  var v = getValues();
+  var btn = document.querySelector('.btn-pdf-dl');
+  if(btn){btn.textContent='⏳ Подготовка...';btn.disabled=true;}
+
+  var styleText = Array.from(document.querySelectorAll('style')).map(function(s){return s.innerHTML;}).join('\n');
+  var fname = 'YURT_Invoice_'+v.driver.replace(/\s+/g,'_')+'_Truck'+v.truck+'_'+new Date().toISOString().slice(0,10);
+
+  var printHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+    '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">'+
+    '<style>'+styleText+'</style>'+
+    '<style>body{margin:0;padding:8mm;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}@page{size:A4;margin:0;}.invoice-wrap{box-shadow:none!important;border:1px solid #ddd!important;border-radius:0!important;}.btn-pdf-dl,.btn-reset,.new-week-wrap{display:none!important;}</style>'+
+    '<title>'+fname+'</title>'+
+    '</head><body>'+area.outerHTML+'</body></html>';
+
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  var isAndroid = /Android/.test(navigator.userAgent);
+  var isMobile = isIOS || isAndroid;
+
+  if(isMobile){
+    // On mobile: download as HTML file — opens in browser, user can share/print
+    var blob = new Blob([printHtml], {type:'text/html;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fname+'.html';
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);}, 5000);
+
+    // Show instruction modal
+    var overlay = document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:16px;';
+    overlay.innerHTML=
+      '<div style="background:#fff;border-radius:16px 16px 16px 16px;width:100%;max-width:420px;overflow:hidden;margin-bottom:8px;">'+
+        '<div style="background:linear-gradient(135deg,#1a1714,#2d2620);padding:18px 20px;display:flex;align-items:center;gap:12px;">'+
+          '<span style="font-size:28px;">📄</span>'+
+          '<div><div style="font-size:15px;font-weight:700;color:var(--acc);">Файл скачан!</div>'+
+          '<div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;">'+fname+'.html</div></div>'+
+        '</div>'+
+        '<div style="padding:18px 20px;">'+
+          (isIOS ?
+            '<div style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:14px;">'+
+            '1. Открой файл из загрузок<br>'+
+            '2. Нажми <strong style="color:var(--txt)">Поделиться</strong> (кнопка внизу) →<br>'+
+            '3. Выбери <strong style="color:var(--txt)">Печать</strong> →<br>'+
+            '4. Сведи пальцы на превью → сохранится как <strong style="color:var(--grn)">PDF</strong></div>'
+          :
+            '<div style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:14px;">'+
+            '1. Открой скачанный файл<br>'+
+            '2. Нажми меню браузера (⋮) →<br>'+
+            '3. Выбери <strong style="color:var(--txt)">Печать</strong> или <strong style="color:var(--txt)">Поделиться</strong> →<br>'+
+            '4. Сохрани как <strong style="color:var(--grn)">PDF</strong></div>'
+          )+
+          '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;background:#1a1714;color:var(--acc);border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--sans);">Понятно ✓</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e){if(e.target===overlay)overlay.remove();});
+
+  } else {
+    // Desktop: open print window
+    var blob2 = new Blob([printHtml], {type:'text/html;charset=utf-8'});
+    var url2 = URL.createObjectURL(blob2);
+    var win = window.open(url2,'_blank','width=900,height=700');
+    if(win){
+      win.onload = function(){ setTimeout(function(){ win.print(); }, 800); };
     } else {
-      pdf.save(fname);
+      // Popup blocked fallback
+      var a2 = document.createElement('a');
+      a2.href = url2; a2.download = fname+'.html'; a2.click();
     }
-    if(btn){btn.textContent=origText;btn.disabled=false;}
-  }).catch(function(err){
-    alert('Ошибка: '+err.message);
-    if(btn){btn.textContent=origText;btn.disabled=false;}
-  });
+    setTimeout(function(){URL.revokeObjectURL(url2);},15000);
+  }
+
+  if(btn){ setTimeout(function(){btn.textContent='📄 Скачать PDF';btn.disabled=false;},1500); }
 }
 </script>
 </body>
